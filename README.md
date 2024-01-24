@@ -8,7 +8,7 @@ PALs from NexusTK/Baram DATs
 ## Setup / Usage
 
 * Import the `project.godot` file in Godot 4.x and Run the
-application (F5)
+application (F5) - the main scene is: `Apps/EPFViewer.tscn`
 
 * If you don't have NexusTK in a predictable location, the program
 won't start (see next step)
