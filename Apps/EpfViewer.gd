@@ -1,0 +1,408 @@
+extends Node2D
+
+const color_tile_size := 16
+const min_frame_size := 1
+const max_frame_size := 16
+
+@onready var epf_options: OptionButton = $UI/EpfOptions
+@onready var epf_index_spinbox: SpinBox = $UI/EpfIndexSpinbox
+
+@onready var frame_container: CenterContainer = $UI/FrameContainer
+
+@onready var pal_options: OptionButton = $UI/PalOptions
+@onready var pal_index_spinbox: SpinBox = $UI/PalIndexSpinbox
+@onready var color_grid: GridContainer = $UI/ColorGrid
+@onready var color_info_container: BoxContainer = $UI/ColorInfoContainer
+@onready var color_offset_spinbox: SpinBox = $UI/ColorOffsetSpinbox
+@onready var animation_speed_slider: HSlider = $UI/AnimationSpeedSlider
+@onready var animated_palettes_only_checkbox: CheckBox = $UI/AnimatedPalettesOnlyCheckbox
+@onready var animated_palette_label: Label = $UI/AnimatedPaletteLabel
+
+@onready var dat_list := {}
+@onready var epf_list := {}
+@onready var pal_list := {}
+
+# Debug Values (Set on load and when [TAB] is pressed)
+## Mage Sa San Shield
+var debug_epf_key := "shield0.dat:Shield0.epf"
+var debug_pal_key := "char.dat:Shield.pal"
+var debug_epf_index := 129
+var debug_pal_index := 1
+var debug_color_offset := 0
+var debug_start_scale := Vector2(10, 10)
+
+var current_epf_key := ""
+var current_pal_key := ""
+
+var frame_sprite: Sprite2D = null
+var current_scale := Vector2(1, 1)
+
+var animated_color_offset := 0
+
+var manual_palette_change := false
+
+var last_palette_spinbox_value := 0
+var current_palette_index := 0
+var current_color_offset := 0
+
+var render_cooldown := 0.0
+var focused_spinbox: SpinBox = null
+
+
+func _ready() -> void:
+	var ntk_data_directory := DirAccess.open(Resources.data_dir)
+
+	# Load EPFs and PALs
+	var dat_threads: Array[Thread] = []
+	var files := []
+	for file_name in ntk_data_directory.get_files():
+		if '.dat' in file_name:
+			# Create Renderers (Threaded)
+			dat_threads.append(Thread.new())
+			dat_threads[-1].start(func(): self.process_dat(file_name))
+
+	# Wait for all DAT threads to finish - then populate OptionButtons
+	var all_finished := false
+	while not all_finished:
+		all_finished = true
+		for dat_thread in dat_threads:
+			if dat_thread.is_alive():
+				all_finished = false
+				break
+	populate_option_buttons()
+	get_viewport().connect("gui_focus_changed", _on_focus_changed)
+
+	if debug_epf_key and debug_pal_key:
+		epf_options.select(get_option_index(epf_options, debug_epf_key))
+		pal_options.select(get_option_index(pal_options, debug_pal_key))
+		load_pal(debug_pal_key, current_pal_key != debug_pal_key)
+		current_pal_key = debug_pal_key
+		load_frame(debug_epf_key, current_epf_key != debug_epf_key)
+		current_epf_key = debug_epf_key
+		epf_index_spinbox.value = debug_epf_index
+		pal_index_spinbox.value = debug_pal_index
+		if debug_color_offset:
+			color_offset_spinbox.value = debug_color_offset
+		_render()
+		current_scale = debug_start_scale
+
+func _process(delta) -> void:
+	if frame_sprite != null:
+		if Input.is_action_just_pressed("zoom-in") and \
+				frame_sprite.scale.x < max_frame_size and \
+				should_zoom():
+			frame_sprite.scale += Vector2(1, 1)
+			current_scale = frame_sprite.scale
+		elif Input.is_action_just_pressed("zoom-out") and \
+				frame_sprite.scale.x > min_frame_size and \
+				should_zoom():
+			frame_sprite.scale -= Vector2(1, 1)
+			current_scale = frame_sprite.scale
+
+	render_cooldown -= delta
+	if render_cooldown <= 0:
+		var pal_key = pal_options.get_item_text(pal_options.selected)
+		var palette_list = pal_list[pal_key]
+		animated_color_offset = animated_color_offset + 1
+		if palette_list and len(palette_list.palettes) > 0:
+			_render()
+		render_cooldown = 1.4 / animation_speed_slider.value
+
+	if Input.is_action_just_pressed("increment_spinbox") and focused_spinbox:
+		focused_spinbox.value += 1
+	elif Input.is_action_just_pressed("decrement_spinbox") and focused_spinbox:
+		focused_spinbox.value -= 1
+
+func _on_focus_changed(control: Control) -> void:
+	var parent_control := control.get_parent()
+
+	if parent_control == epf_index_spinbox:
+		focused_spinbox = epf_index_spinbox
+	elif parent_control == color_offset_spinbox:
+		focused_spinbox = color_offset_spinbox
+	elif parent_control == pal_index_spinbox:
+		focused_spinbox = pal_index_spinbox
+	else:
+		focused_spinbox = null
+
+func process_dat(dat_file_name: String) -> void:
+	dat_list[dat_file_name] = DatFileHandler.new(dat_file_name)
+	for dfile in dat_list[dat_file_name].files:
+		if '.epf' in dfile.file_name.to_lower():
+			var epf_key = dat_file_name + ":" + dfile.file_name
+			epf_list[epf_key] = {}
+		if '.pal' in dfile.file_name.to_lower():
+			var pal_key = dat_file_name + ":" + dfile.file_name
+			pal_list[pal_key] = {}
+
+func _sort(a: String, b: String) -> bool:
+	if a.to_lower() \
+		< b.to_lower():
+		return true
+	return false
+
+func populate_option_buttons() -> void:
+	var sorted_epfs := epf_list.keys()
+	sorted_epfs.sort_custom(_sort)
+	for epf in sorted_epfs:
+		if epf:
+			self.epf_options.add_item(epf)
+
+	var sorted_pals := pal_list.keys()
+	sorted_pals.sort_custom(_sort)
+	for pal in sorted_pals:
+		if pal:
+			self.pal_options.add_item(pal)
+
+func should_zoom() -> bool:
+	var container_rect := frame_container.get_rect()
+	container_rect.position -= Vector2(300, 400)
+	container_rect.size += Vector2(600, 800)
+
+	return container_rect.has_point(get_global_mouse_position())
+
+func load_pal(pal_key: String, reset: bool=false) -> void:
+	current_pal_key = pal_key
+	if not pal_list[pal_key]:
+		var dat := DatFileHandler.new(pal_key.split(":")[0])
+		pal_list[pal_key] = PalFileHandler.new(dat.get_file(pal_key.split(":")[1]))
+
+	if reset:
+		pal_index_spinbox.value = 0
+		pal_index_spinbox.max_value = len(pal_list[pal_key].palettes)
+		$UI/PalIndexLabel.text = "Palette Index (0-" + String.num(pal_index_spinbox.max_value - 1) + "):"
+
+func create_color_rect(
+		color: Color,
+		color_int: int=-1,
+		size: Vector2=Vector2(color_tile_size, color_tile_size)) -> ColorRect:
+	var color_rect := ColorRect.new()
+
+	color_rect.color = color
+	color_rect.custom_minimum_size = size
+	
+	if color_int >= 0:
+		var color_label := Label.new()
+		color_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		color_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		color_label.text = ("%x" % color_int).to_upper()
+		color_label.custom_minimum_size = size
+		color_label.add_theme_font_size_override("font_size", 8)
+		color_rect.add_child(color_label)
+
+	return color_rect
+
+func clear_color_info() -> void:
+	for child in color_info_container.get_children():
+		child.queue_free()
+		color_info_container.remove_child(child)
+
+func update_color_info(color: Color) -> void:
+	clear_color_info()
+
+	color_info_container.add_child(create_color_rect(Color(color.r, 0, 0), color.r8))
+	color_info_container.add_child(create_color_rect(Color(0, color.g, 0), color.g8))
+	color_info_container.add_child(create_color_rect(Color(0, 0, color.b), color.b8))
+
+func clear_grid() -> void:
+	for child in color_grid.get_children():
+		child.queue_free()
+		color_grid.remove_child(child)
+
+func load_frame(epf_key: String, reset: bool=false) -> void:
+	current_epf_key = epf_key
+	if not epf_list[epf_key]:
+		var dat := DatFileHandler.new(epf_key.split(":")[0])
+		epf_list[epf_key] = EpfFileHandler.new(dat.get_file(epf_key.split(":")[1]))
+
+	if reset:
+		epf_index_spinbox.value = 0
+		epf_index_spinbox.max_value = epf_list[epf_key].frame_count
+		$UI/EpfIndexLabel.text = "Frame Index (0-" + String.num(epf_index_spinbox.max_value - 1) + ")"
+
+func clear_frame_container() -> void:
+	for child in frame_container.get_children():
+		child.queue_free()
+		frame_container.remove_child(child)
+
+func update_spinboxes() -> void:
+	if epf_index_spinbox.value == epf_index_spinbox.min_value:
+		epf_index_spinbox.value = epf_index_spinbox.max_value - 1
+	if epf_index_spinbox.value == epf_index_spinbox.max_value:
+		epf_index_spinbox.value = epf_index_spinbox.min_value + 1
+
+	if color_offset_spinbox.value == color_offset_spinbox.min_value:
+		color_offset_spinbox.value = color_offset_spinbox.max_value - 1
+	if color_offset_spinbox.value == color_offset_spinbox.max_value:
+		color_offset_spinbox.value = color_offset_spinbox.min_value + 1
+
+	if pal_index_spinbox.value == pal_index_spinbox.min_value:
+		pal_index_spinbox.value = pal_index_spinbox.max_value - 1
+	if pal_index_spinbox.value == pal_index_spinbox.max_value:
+		pal_index_spinbox.value = pal_index_spinbox.min_value + 1
+
+func _render(value: int=0) -> void:
+	update_spinboxes()
+
+	# Update Palette
+	var pal_key = pal_options.get_item_text(pal_options.selected)
+	load_pal(pal_key, current_pal_key != pal_key)
+	current_pal_key = pal_key
+
+	var palette = pal_list[pal_key].get_palette(pal_index_spinbox.value, 255)
+	if palette == null:
+		clear_frame_container()
+		return
+
+	animated_palette_label.text = "[Animated]" if len(palette.animation_ranges) > 0 else ""
+	
+	var epf_key = epf_options.get_item_text(epf_options.selected)
+	var epf_dat_name = epf_key.split(":")[0]
+	var epf_name := epf_key.split(":")[1]
+	var renderer := NTK_Renderer.new()
+	var frame := NTK_Renderer.get_epf_frame(epf_dat_name, epf_name, epf_index_spinbox.value)
+	var dot_these_palettes := []
+	for i in range(len(palette.colors)):
+		if i in frame.raw_pixel_data_array:
+			var dotted_index := (i + int(color_offset_spinbox.value)) % Resources.palette_color_count
+			dot_these_palettes.append(dotted_index)
+			
+	if current_palette_index != pal_index_spinbox.value or current_color_offset != color_offset_spinbox.value:
+		current_palette_index = pal_index_spinbox.value
+		current_color_offset = color_offset_spinbox.value
+		
+		clear_grid()
+		for i in range(len(palette.colors)):
+			var color = palette.colors[i]
+			var color_rect := ColorRect.new()
+			color_rect.custom_minimum_size = Vector2(color_tile_size, color_tile_size)
+			color_rect.color = color
+			color_rect.connect("mouse_entered", func(): self.update_color_info(color))
+			color_rect.connect("mouse_exited", self.clear_color_info)
+			if i in palette.animation_indices:
+				var color_label := Label.new()
+				var font_color = Color.BLACK if (color.r8*0.299 + color.g8*0.587 + color.b8*0.114) > 186 else Color.WHITE
+				color_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				color_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+				color_label.position += Vector2(2, 0)
+				color_label.text = "A"
+				color_label.custom_minimum_size = Vector2(color_tile_size, color_tile_size)
+				color_label.add_theme_color_override("font_color", font_color)
+				color_label.add_theme_font_size_override("font_size", 8)
+				color_rect.add_child(color_label)
+			if i in dot_these_palettes:
+				var color_label := Label.new()
+				var font_color = Color.BLACK if (color.r8*0.299 + color.g8*0.587 + color.b8*0.114) > 186 else Color.WHITE
+				color_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				color_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+				color_label.position += Vector2(-2, -9)
+				color_label.text = "·"
+				color_label.custom_minimum_size = Vector2(color_tile_size, color_tile_size)
+				color_label.add_theme_color_override("font_color", font_color)
+				color_label.add_theme_font_size_override("font_size", 24)
+				color_rect.add_child(color_label)
+			color_grid.add_child(color_rect)
+
+	# Update Frame
+	epf_key = epf_options.get_item_text(epf_options.selected) # can be refactored
+	load_frame(epf_key, current_epf_key != epf_key)
+	current_epf_key = epf_key
+
+	epf_dat_name = epf_key.split(":")[0] # can be refactored
+	var pal_dat_name = pal_key.split(":")[0] 
+	epf_name = epf_key.split(":")[1]   # can be refactored
+	var pal_name = pal_key.split(":")[1]
+	if epf_dat_name not in dat_list:
+		dat_list[epf_dat_name] = DatFileHandler.new(epf_dat_name)
+	if pal_dat_name not in dat_list:
+		dat_list[pal_dat_name] = DatFileHandler.new(pal_dat_name)
+	if epf_dat_name not in dat_list:
+		dat_list[epf_dat_name] = DatFileHandler.new(epf_dat_name)
+	if pal_dat_name not in dat_list:
+		dat_list[pal_dat_name] = DatFileHandler.new(pal_dat_name)
+
+	var frame_texture := ImageTexture.create_from_image(
+		NTK_Renderer.get_image_with_file_handlers(
+			dat_list[epf_dat_name],
+			epf_list[epf_key],
+			dat_list[pal_dat_name],
+			pal_list[pal_key],
+			epf_index_spinbox.value,
+			pal_index_spinbox.value,
+			animated_color_offset,
+			color_offset_spinbox.value))
+
+	if frame_texture:
+		clear_frame_container()
+		frame_sprite = Sprite2D.new()
+		frame_sprite.texture = frame_texture
+		frame_container.add_child(frame_sprite)
+		frame_sprite.scale = current_scale
+	else:
+		clear_frame_container()
+
+func get_option_index(
+		option_button: OptionButton,
+		option_string: String) -> int:
+	var option_index := -1
+
+	for i in range(option_button.item_count):
+		var option_text := option_button.get_item_text(i)
+		if option_text == option_string:
+			option_index = i
+			break
+	
+	return option_index
+
+func match_palette() -> void:
+	var epf_key = epf_options.get_item_text(epf_options.selected)
+	if epf_key in Resources.EpfPals:
+		var pal_key = Resources.EpfPals[epf_key]
+		pal_options.select(get_option_index(pal_options, pal_key))
+
+func _on_epf_options(index):
+	match_palette()
+	_render(index)
+
+func _on_pal_index_spinbox_value_changed(spinbox_value):
+	# If the animate_palette_only_checkbox is pressed, the spinner should search for the next (or previous)
+	# palette that has any matching animated palette indices.
+	# (intersection of the palette animation indices and the frames palette indices).
+	if animated_palettes_only_checkbox.button_pressed and not manual_palette_change:
+		var epf_key = epf_options.get_item_text(epf_options.selected)
+		var epf_dat_name = epf_key.split(":")[0]
+		var epf_name := epf_key.split(":")[1]
+		var renderer := NTK_Renderer.new()
+		var frame := NTK_Renderer.get_epf_frame(epf_dat_name, epf_name, epf_index_spinbox.value)
+		var unique_epf_pal_indices := get_unique_values(Array(frame.raw_pixel_data))
+		var counter = spinbox_value
+		var intersected := false
+
+		while not intersected:
+			var pal_key = pal_options.get_item_text(pal_options.selected)
+			var palette = pal_list[pal_key].palettes[counter]
+
+			if Resources.arrays_intersect(
+				frame.raw_pixel_data_array,
+				palette.animation_indices):
+					intersected = true
+					break
+
+			counter = counter - 1 if spinbox_value < last_palette_spinbox_value else counter + 1
+			if counter < 0 or counter >= len(pal_list[pal_key].palettes):
+				counter = 0
+				break
+
+		manual_palette_change = true
+		pal_index_spinbox.value = spinbox_value + counter
+		manual_palette_change = false
+		
+		last_palette_spinbox_value = pal_index_spinbox.value
+	_render()
+
+func get_unique_values(arr: Array) -> Array:
+	var unique_arr = []
+	for element in arr:
+		if not unique_arr.has(element):
+			unique_arr.append(element)
+	return unique_arr
