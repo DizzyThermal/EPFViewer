@@ -2,17 +2,17 @@
 
 [ext_resource type="Script" path="res://Apps/EpfViewer.gd" id="1_n58qr"]
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_wmo31"]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_vla35"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bk01i"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_nfsbo"]
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8es82"]
-
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_xby40"]
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bk01i"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8es82"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_vla35"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_wmo31"]
 
 [node name="EpfViewer" type="Node2D"]
 script = ExtResource("1_n58qr")
@@ -123,12 +123,12 @@ offset_right = -8.0
 offset_bottom = 141.0
 grow_horizontal = 0
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxEmpty_wmo31")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_vla35")
-theme_override_styles/disabled = SubResource("StyleBoxEmpty_nfsbo")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_8es82")
-theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_xby40")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_bk01i")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_nfsbo")
+theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_xby40")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_8es82")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_vla35")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_wmo31")
 text = "Skip Static"
 
 [node name="AnimationSpeedSlider" type="HSlider" parent="UI"]
