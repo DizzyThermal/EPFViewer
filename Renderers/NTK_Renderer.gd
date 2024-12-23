@@ -148,12 +148,3 @@ static func get_image_with_file_handlers(
 	renderer.pal = pal
 
 	return renderer.render_frame(frame_index, palette_index, true, animated_color_offset, initial_color_offset, render_animated)
-
-static func get_epf_frame(
-		epf_dat_name: String,
-		epf_name: String,
-		frame_index: int=0) -> NTK_Frame:
-	var renderer := NTK_Renderer.new()
-	renderer.epfs.append(EpfFileHandler.new(DatFileHandler.new(epf_dat_name).get_file(epf_name)))
-
-	return renderer.get_frame(frame_index)

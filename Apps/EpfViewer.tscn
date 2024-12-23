@@ -125,7 +125,6 @@ theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_xby40")
 theme_override_styles/hover = SubResource("StyleBoxEmpty_8es82")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_vla35")
 theme_override_styles/normal = SubResource("StyleBoxEmpty_wmo31")
-button_pressed = true
 text = "Reverse"
 
 [node name="AnimatedPalettesOnlyCheckbox" type="CheckBox" parent="UI"]

@@ -4,6 +4,8 @@ const color_tile_size := 16
 const min_frame_size := 1
 const max_frame_size := 16
 
+const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
+
 @onready var epf_options: OptionButton = $UI/EpfOptions
 @onready var epf_index_spinbox: SpinBox = $UI/EpfIndexSpinbox
 
@@ -30,7 +32,7 @@ var debug_pal_key := "char.dat:Sword.pal"
 var debug_epf_index := 86
 var debug_pal_index := 10
 var debug_color_offset := 0
-var debug_start_scale := Vector2(10, 10)
+var debug_start_scale := Vector2(8, 8)
 
 var current_epf_key := ""
 var current_pal_key := ""
@@ -104,10 +106,10 @@ func _process(delta) -> void:
 	if render_cooldown <= 0:
 		var pal_key = pal_options.get_item_text(pal_options.selected)
 		var palette_list = pal_list[pal_key]
-		if animated_palettes_only_checkbox.button_pressed:
-			animated_color_offset = animated_color_offset - 1
-		else:
+		if reverse_animated_pallete_checkbox.button_pressed:
 			animated_color_offset = animated_color_offset + 1
+		else:
+			animated_color_offset = animated_color_offset - 1
 		if palette_list and len(palette_list.palettes) > 0:
 			_render()
 		render_cooldown = 1.4 / animation_speed_slider.value
@@ -130,7 +132,6 @@ func _on_focus_changed(control: Control) -> void:
 		focused_spinbox = null
 
 func process_dat(dat_file_name: String) -> void:
-	print("process_dat :: " + dat_file_name)
 	dat_list[dat_file_name] = DatFileHandler.new(dat_file_name)
 	for dfile in dat_list[dat_file_name].files:
 		if '.epf' in dfile.file_name.to_lower():
@@ -169,7 +170,6 @@ func should_zoom() -> bool:
 func load_pal(pal_key: String, reset: bool=false) -> void:
 	current_pal_key = pal_key
 	if not pal_list[pal_key]:
-		print("load_pal :: Dat/Pal new")
 		var dat := DatFileHandler.new(pal_key.split(":")[0])
 		pal_list[pal_key] = PalFileHandler.new(dat.get_file(pal_key.split(":")[1]))
 
@@ -218,7 +218,6 @@ func clear_grid() -> void:
 func load_frame(epf_key: String, reset: bool=false) -> void:
 	current_epf_key = epf_key
 	if not epf_list[epf_key]:
-		print("load_frame :: Dat/Epf new")
 		var dat := DatFileHandler.new(epf_key.split(":")[0])
 		epf_list[epf_key] = EpfFileHandler.new(dat.get_file(epf_key.split(":")[1]))
 
@@ -264,9 +263,13 @@ func _render(value: int=0) -> void:
 	animated_palette_label.text = "[Animated]" if len(palette.animation_ranges) > 0 else ""
 	
 	var epf_key = epf_options.get_item_text(epf_options.selected)
+	load_frame(epf_key, current_epf_key != epf_key)
+	current_epf_key = epf_key
+
 	var epf_dat_name = epf_key.split(":")[0]
 	var epf_name := epf_key.split(":")[1]
-	var frame := NTK_Renderer.get_epf_frame(epf_dat_name, epf_name, epf_index_spinbox.value)
+
+	var frame: NTK_Frame = epf_list[epf_key].get_frame(epf_index_spinbox.value, true)
 	var dot_these_palettes := []
 	for i in range(len(palette.colors)):
 		if i in frame.raw_pixel_data_array:
@@ -310,19 +313,11 @@ func _render(value: int=0) -> void:
 			color_grid.add_child(color_rect)
 
 	# Update Frame
-	epf_key = epf_options.get_item_text(epf_options.selected) # can be refactored
-	load_frame(epf_key, current_epf_key != epf_key)
-	current_epf_key = epf_key
-
-	epf_dat_name = epf_key.split(":")[0] # can be refactored
 	var pal_dat_name = pal_key.split(":")[0] 
-	epf_name = epf_key.split(":")[1]   # can be refactored
 	var pal_name = pal_key.split(":")[1]
 	if epf_dat_name not in dat_list:
-		print("_render :: epf_dat - New Dat")
 		dat_list[epf_dat_name] = DatFileHandler.new(epf_dat_name)
 	if pal_dat_name not in dat_list:
-		print("_render :: pal_dat - New Dat")
 		dat_list[pal_dat_name] = DatFileHandler.new(pal_dat_name)
 
 	var frame_texture := ImageTexture.create_from_image(
@@ -376,7 +371,7 @@ func _on_pal_index_spinbox_value_changed(spinbox_value):
 		var epf_key = epf_options.get_item_text(epf_options.selected)
 		var epf_dat_name = epf_key.split(":")[0]
 		var epf_name := epf_key.split(":")[1]
-		var frame := NTK_Renderer.get_epf_frame(epf_dat_name, epf_name, epf_index_spinbox.value)
+		var frame: NTK_Frame = epf_list[epf_key].get_frame(epf_index_spinbox.value, false)
 		var unique_epf_pal_indices := get_unique_values(Array(frame.raw_pixel_data))
 		var counter = spinbox_value
 		var intersected := false
