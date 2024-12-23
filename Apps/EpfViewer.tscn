@@ -113,6 +113,21 @@ min_value = -1.0
 max_value = 256.0
 alignment = 1
 
+[node name="ReverseCheckbox" type="CheckBox" parent="UI"]
+offset_left = 101.0
+offset_top = 181.0
+offset_right = 188.0
+offset_bottom = 232.0
+theme_override_font_sizes/font_size = 12
+theme_override_styles/focus = SubResource("StyleBoxEmpty_bk01i")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_nfsbo")
+theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_xby40")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_8es82")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_vla35")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_wmo31")
+button_pressed = true
+text = "Reverse"
+
 [node name="AnimatedPalettesOnlyCheckbox" type="CheckBox" parent="UI"]
 anchors_preset = 1
 anchor_left = 1.0
@@ -242,6 +257,7 @@ metadata/_edit_use_anchors_ = true
 [connection signal="item_selected" from="UI/EpfOptions" to="." method="_on_epf_options"]
 [connection signal="value_changed" from="UI/EpfIndexSpinbox" to="." method="_render"]
 [connection signal="value_changed" from="UI/ColorOffsetSpinbox" to="." method="_render"]
+[connection signal="pressed" from="UI/ReverseCheckbox" to="." method="_on_animate_checkbox_pressed"]
 [connection signal="pressed" from="UI/AnimatedPalettesOnlyCheckbox" to="." method="_on_animate_checkbox_pressed"]
 [connection signal="drag_ended" from="UI/AnimationSpeedSlider" to="." method="_on_animation_speed_slider_drag_ended"]
 [connection signal="item_focused" from="UI/PalOptions" to="." method="_render"]

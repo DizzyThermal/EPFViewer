@@ -14,6 +14,7 @@ const max_frame_size := 16
 @onready var color_grid: GridContainer = $UI/ColorGrid
 @onready var color_info_container: BoxContainer = $UI/ColorInfoContainer
 @onready var color_offset_spinbox: SpinBox = $UI/ColorOffsetSpinbox
+@onready var reverse_animated_pallete_checkbox: CheckBox = $UI/ReverseCheckbox
 @onready var animation_speed_slider: HSlider = $UI/AnimationSpeedSlider
 @onready var animated_palettes_only_checkbox: CheckBox = $UI/AnimatedPalettesOnlyCheckbox
 @onready var animated_palette_label: Label = $UI/AnimatedPaletteLabel
@@ -24,10 +25,10 @@ const max_frame_size := 16
 
 # Debug Values (Set on load and when [TAB] is pressed)
 ## Mage Sa San Shield
-var debug_epf_key := "shield0.dat:Shield0.epf"
-var debug_pal_key := "char.dat:Shield.pal"
-var debug_epf_index := 129
-var debug_pal_index := 1
+var debug_epf_key := "sword0.dat:Sword0.epf"
+var debug_pal_key := "char.dat:Sword.pal"
+var debug_epf_index := 86
+var debug_pal_index := 10
 var debug_color_offset := 0
 var debug_start_scale := Vector2(10, 10)
 
@@ -103,7 +104,10 @@ func _process(delta) -> void:
 	if render_cooldown <= 0:
 		var pal_key = pal_options.get_item_text(pal_options.selected)
 		var palette_list = pal_list[pal_key]
-		animated_color_offset = animated_color_offset + 1
+		if animated_palettes_only_checkbox.button_pressed:
+			animated_color_offset = animated_color_offset - 1
+		else:
+			animated_color_offset = animated_color_offset + 1
 		if palette_list and len(palette_list.palettes) > 0:
 			_render()
 		render_cooldown = 1.4 / animation_speed_slider.value
@@ -126,6 +130,7 @@ func _on_focus_changed(control: Control) -> void:
 		focused_spinbox = null
 
 func process_dat(dat_file_name: String) -> void:
+	print("process_dat :: " + dat_file_name)
 	dat_list[dat_file_name] = DatFileHandler.new(dat_file_name)
 	for dfile in dat_list[dat_file_name].files:
 		if '.epf' in dfile.file_name.to_lower():
@@ -164,6 +169,7 @@ func should_zoom() -> bool:
 func load_pal(pal_key: String, reset: bool=false) -> void:
 	current_pal_key = pal_key
 	if not pal_list[pal_key]:
+		print("load_pal :: Dat/Pal new")
 		var dat := DatFileHandler.new(pal_key.split(":")[0])
 		pal_list[pal_key] = PalFileHandler.new(dat.get_file(pal_key.split(":")[1]))
 
@@ -212,6 +218,7 @@ func clear_grid() -> void:
 func load_frame(epf_key: String, reset: bool=false) -> void:
 	current_epf_key = epf_key
 	if not epf_list[epf_key]:
+		print("load_frame :: Dat/Epf new")
 		var dat := DatFileHandler.new(epf_key.split(":")[0])
 		epf_list[epf_key] = EpfFileHandler.new(dat.get_file(epf_key.split(":")[1]))
 
@@ -259,7 +266,6 @@ func _render(value: int=0) -> void:
 	var epf_key = epf_options.get_item_text(epf_options.selected)
 	var epf_dat_name = epf_key.split(":")[0]
 	var epf_name := epf_key.split(":")[1]
-	var renderer := NTK_Renderer.new()
 	var frame := NTK_Renderer.get_epf_frame(epf_dat_name, epf_name, epf_index_spinbox.value)
 	var dot_these_palettes := []
 	for i in range(len(palette.colors)):
@@ -313,12 +319,10 @@ func _render(value: int=0) -> void:
 	epf_name = epf_key.split(":")[1]   # can be refactored
 	var pal_name = pal_key.split(":")[1]
 	if epf_dat_name not in dat_list:
+		print("_render :: epf_dat - New Dat")
 		dat_list[epf_dat_name] = DatFileHandler.new(epf_dat_name)
 	if pal_dat_name not in dat_list:
-		dat_list[pal_dat_name] = DatFileHandler.new(pal_dat_name)
-	if epf_dat_name not in dat_list:
-		dat_list[epf_dat_name] = DatFileHandler.new(epf_dat_name)
-	if pal_dat_name not in dat_list:
+		print("_render :: pal_dat - New Dat")
 		dat_list[pal_dat_name] = DatFileHandler.new(pal_dat_name)
 
 	var frame_texture := ImageTexture.create_from_image(
@@ -372,7 +376,6 @@ func _on_pal_index_spinbox_value_changed(spinbox_value):
 		var epf_key = epf_options.get_item_text(epf_options.selected)
 		var epf_dat_name = epf_key.split(":")[0]
 		var epf_name := epf_key.split(":")[1]
-		var renderer := NTK_Renderer.new()
 		var frame := NTK_Renderer.get_epf_frame(epf_dat_name, epf_name, epf_index_spinbox.value)
 		var unique_epf_pal_indices := get_unique_values(Array(frame.raw_pixel_data))
 		var counter = spinbox_value
