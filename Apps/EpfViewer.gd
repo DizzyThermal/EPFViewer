@@ -26,13 +26,21 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 @onready var pal_list := {}
 
 # Debug Values (Set on load and when [TAB] is pressed)
-## Mage Sa San Shield
-var debug_epf_key := "sword0.dat:Sword0.epf"
-var debug_pal_key := "char.dat:Sword.pal"
-var debug_epf_index := 86
+## Flameblade
+#var debug_epf_key := "sword0.dat:Sword0.epf"
+#var debug_pal_key := "char.dat:Sword.pal"
+#var debug_epf_index := 86
+#var debug_pal_index := 0
+#var debug_color_offset := 0
+#var debug_start_scale := Vector2(8, 8)
+
+## Ox Boss
+var debug_epf_key := "mon4.dat:mon4.epf"
+var debug_pal_key := "mon.dat:monster.pal"
+var debug_epf_index := 208
 var debug_pal_index := 0
 var debug_color_offset := 0
-var debug_start_scale := Vector2(8, 8)
+var debug_start_scale := Vector2(4, 4)
 
 var current_epf_key := ""
 var current_pal_key := ""
