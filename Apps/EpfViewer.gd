@@ -382,9 +382,11 @@ func _on_pal_index_spinbox_value_changed(spinbox_value):
 		var counter: int = spinbox_value
 		var positive_direction: int = counter - last_palette_spinbox_value > 0
 		var first_check = true
-	
+
 		while first_check or counter != spinbox_value:
 			first_check = false
+			if counter > len(pal_list[pal_key].palettes) - 1:
+				counter = 0
 			var palette = pal_list[pal_key].palettes[counter]
 			if not palette.animation_ranges:
 				if positive_direction:
