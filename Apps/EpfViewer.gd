@@ -50,8 +50,6 @@ var current_scale := Vector2(1, 1)
 
 var animated_color_offset := 0
 
-var manual_palette_change := false
-
 var last_palette_spinbox_value := 0
 var current_palette_index := 0
 var current_color_offset := 0
@@ -379,35 +377,25 @@ func _on_pal_index_spinbox_value_changed(spinbox_value):
 	# If the animate_palette_only_checkbox is pressed, the spinner should search for the next (or previous)
 	# palette that has any matching animated palette indices.
 	# (intersection of the palette animation indices and the frames palette indices).
-	if animated_palettes_only_checkbox.button_pressed and not manual_palette_change:
-		var epf_key = epf_options.get_item_text(epf_options.selected)
-		var epf_dat_name = epf_key.split(":")[0]
-		var epf_name := epf_key.split(":")[1]
-		var frame: NTK_Frame = epf_list[epf_key].get_frame(epf_index_spinbox.value, false)
-		var unique_epf_pal_indices := get_unique_values(Array(frame.raw_pixel_data))
-		var counter = spinbox_value
-		var intersected := false
-
-		while not intersected:
-			var pal_key = pal_options.get_item_text(pal_options.selected)
+	if animated_palettes_only_checkbox.button_pressed:
+		var pal_key = pal_options.get_item_text(pal_options.selected)
+		var counter: int = spinbox_value
+		var positive_direction: int = counter - last_palette_spinbox_value > 0
+		var first_check = true
+	
+		while first_check or counter != spinbox_value:
+			first_check = false
 			var palette = pal_list[pal_key].palettes[counter]
+			if not palette.animation_ranges:
+				if positive_direction:
+					counter = (counter + 1) % Resources.palette_color_count
+				else:
+					counter = (counter - 1) % Resources.palette_color_count
+				continue
+			pal_index_spinbox.value = counter
+			last_palette_spinbox_value = counter
+			break
 
-			if Resources.arrays_intersect(
-				frame.raw_pixel_data_array,
-				palette.animation_indices):
-					intersected = true
-					break
-
-			counter = counter - 1 if spinbox_value < last_palette_spinbox_value else counter + 1
-			if counter < 0 or counter >= len(pal_list[pal_key].palettes):
-				counter = 0
-				break
-
-		manual_palette_change = true
-		pal_index_spinbox.value = spinbox_value + counter
-		manual_palette_change = false
-		
-		last_palette_spinbox_value = pal_index_spinbox.value
 	_render()
 
 func get_unique_values(arr: Array) -> Array:
