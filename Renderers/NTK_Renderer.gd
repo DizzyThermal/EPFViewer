@@ -31,7 +31,7 @@ func create_pixel_data(
 		
 		if color_index in animated_colors:
 			var animated_colors_index := (animated_colors.find(original_color_index) + animated_color_offset) % len(animated_colors)
-			color_index = animated_colors[animated_colors_index]		
+			color_index = animated_colors[animated_colors_index]
 
 		var color := palette.colors[color_index]
 		pixel_data.encode_u32((i * 4), color.to_abgr32())

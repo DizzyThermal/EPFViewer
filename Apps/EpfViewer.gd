@@ -252,6 +252,7 @@ func _render(value: int=0) -> void:
 
 	# Update Palette
 	var pal_key = pal_options.get_item_text(pal_options.selected)
+	var palette_updated = current_pal_key != pal_key
 	load_pal(pal_key, current_pal_key != pal_key)
 	current_pal_key = pal_key
 
@@ -276,7 +277,9 @@ func _render(value: int=0) -> void:
 			var dotted_index := (i + int(color_offset_spinbox.value)) % Resources.palette_color_count
 			dot_these_palettes.append(dotted_index)
 			
-	if current_palette_index != pal_index_spinbox.value or current_color_offset != color_offset_spinbox.value:
+	if palette_updated or \
+			current_palette_index != pal_index_spinbox.value or \
+			current_color_offset != color_offset_spinbox.value:
 		current_palette_index = pal_index_spinbox.value
 		current_color_offset = color_offset_spinbox.value
 		
