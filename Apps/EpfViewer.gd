@@ -30,7 +30,7 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 var debug_epf_key := "sword0.dat:Sword0.epf"
 var debug_pal_key := "char.dat:Sword.pal"
 var debug_epf_index := 86
-var debug_pal_index := 10
+var debug_pal_index := 0
 var debug_color_offset := 0
 var debug_start_scale := Vector2(8, 8)
 
@@ -86,7 +86,7 @@ func _ready() -> void:
 		pal_index_spinbox.value = debug_pal_index
 		if debug_color_offset:
 			color_offset_spinbox.value = debug_color_offset
-		_render()
+		_render(true)
 		current_scale = debug_start_scale
 
 func _process(delta) -> void:
@@ -247,7 +247,7 @@ func update_spinboxes() -> void:
 	if pal_index_spinbox.value == pal_index_spinbox.max_value:
 		pal_index_spinbox.value = pal_index_spinbox.min_value + 1
 
-func _render(value: int=0) -> void:
+func _render(force_grid_render: bool=false) -> void:
 	update_spinboxes()
 
 	# Update Palette
@@ -276,13 +276,14 @@ func _render(value: int=0) -> void:
 		if i in frame.raw_pixel_data_array:
 			var dotted_index := (i + int(color_offset_spinbox.value)) % Resources.palette_color_count
 			dot_these_palettes.append(dotted_index)
-			
+
 	if palette_updated or \
+			force_grid_render or \
 			current_palette_index != pal_index_spinbox.value or \
 			current_color_offset != color_offset_spinbox.value:
 		current_palette_index = pal_index_spinbox.value
 		current_color_offset = color_offset_spinbox.value
-		
+
 		clear_grid()
 		for i in range(len(palette.colors)):
 			var color = palette.colors[i]
