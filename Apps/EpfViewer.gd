@@ -15,6 +15,7 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 @onready var pal_index_spinbox: SpinBox = $UI/PalIndexSpinbox
 @onready var color_grid: GridContainer = $UI/ColorGrid
 @onready var color_info_container: BoxContainer = $UI/ColorInfoContainer
+@onready var color_info_index_label: Label = $UI/ColorInfoIndex
 @onready var color_offset_spinbox: SpinBox = $UI/ColorOffsetSpinbox
 @onready var reverse_animated_pallete_checkbox: CheckBox = $UI/ReverseCheckbox
 @onready var animation_speed_slider: HSlider = $UI/AnimationSpeedSlider
@@ -39,8 +40,16 @@ var debug_epf_key := "mon4.dat:mon4.epf"
 var debug_pal_key := "mon.dat:monster.pal"
 var debug_epf_index := 208
 var debug_pal_index := 0
-var debug_color_offset := 0
+var debug_color_offset := 160
 var debug_start_scale := Vector2(4, 4)
+
+### Face
+#var debug_epf_key := "face0.dat:Face0.epf"
+#var debug_pal_key := "char.dat:Face.pal"
+#var debug_epf_index := 6
+#var debug_pal_index := 0
+#var debug_color_offset := 0
+#var debug_start_scale := Vector2(4, 4)
 
 var current_epf_key := ""
 var current_pal_key := ""
@@ -208,13 +217,16 @@ func clear_color_info() -> void:
 	for child in color_info_container.get_children():
 		child.queue_free()
 		color_info_container.remove_child(child)
+	color_info_index_label.text = ""
 
-func update_color_info(color: Color) -> void:
+func update_color_info(color: Color, color_index: int) -> void:
 	clear_color_info()
 
 	color_info_container.add_child(create_color_rect(Color(color.r, 0, 0), color.r8))
 	color_info_container.add_child(create_color_rect(Color(0, color.g, 0), color.g8))
 	color_info_container.add_child(create_color_rect(Color(0, 0, color.b), color.b8))
+	
+	color_info_index_label.text = str(color_index)
 
 func clear_grid() -> void:
 	for child in color_grid.get_children():
@@ -279,7 +291,7 @@ func _render(force_grid_render: bool=false) -> void:
 	var frame: NTK_Frame = epf_list[epf_key].get_frame(epf_index_spinbox.value, true)
 	var dot_these_palettes := []
 	for i in range(len(palette.colors)):
-		if i in frame.raw_pixel_data_array:
+		if i != 0 and i in frame.raw_pixel_data_array:
 			var dotted_index := (i + int(color_offset_spinbox.value)) % Resources.palette_color_count
 			dot_these_palettes.append(dotted_index)
 
@@ -296,7 +308,7 @@ func _render(force_grid_render: bool=false) -> void:
 			var color_rect := ColorRect.new()
 			color_rect.custom_minimum_size = Vector2(color_tile_size, color_tile_size)
 			color_rect.color = color
-			color_rect.connect("mouse_entered", func(): self.update_color_info(color))
+			color_rect.connect("mouse_entered", func(): self.update_color_info(color, i))
 			color_rect.connect("mouse_exited", self.clear_color_info)
 			if i in palette.animation_indices:
 				var color_label := Label.new()

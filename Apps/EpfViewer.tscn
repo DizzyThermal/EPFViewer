@@ -246,11 +246,23 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -192.0
-offset_top = 181.0
+offset_top = 185.0
 offset_right = -192.0
-offset_bottom = 181.0
+offset_bottom = 185.0
 grow_horizontal = 0
 metadata/_edit_use_anchors_ = true
+
+[node name="ColorInfoIndex" type="Label" parent="UI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -241.0
+offset_top = 205.0
+offset_right = -201.0
+offset_bottom = 228.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
 
 [connection signal="item_focused" from="UI/EpfOptions" to="." method="_on_epf_options"]
 [connection signal="item_selected" from="UI/EpfOptions" to="." method="_on_epf_options"]
