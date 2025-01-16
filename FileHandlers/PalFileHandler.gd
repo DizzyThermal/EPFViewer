@@ -38,9 +38,9 @@ func _init(file):
 		var palette = Palette.new(colors, animation_ranges, animation_indices, unknown_bytes_1, unknown_bytes_2)
 		if i in Debug.debug_pal_indices:
 			print("            DEBUG: Palette Index: ", i)
+			print("            DEBUG: Palette Unknown Bytes 1: ", palette.unknown_bytes_1)
 			print("            DEBUG: Palette Animation Range Count: ", animation_range_count)
 			print("            DEBUG: Palette Animation Ranges: ", palette.animation_ranges)
-			print("            DEBUG: Palette Unknown Bytes 1: ", palette.unknown_bytes_1)
 			print("            DEBUG: Palette Unknown Bytes 2: ", palette.unknown_bytes_2)
 		palettes.append(palette)
 

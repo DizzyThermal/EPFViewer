@@ -36,12 +36,12 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 #var debug_start_scale := Vector2(8, 8)
 
 ## Ox Boss
-var debug_epf_key := "mon4.dat:mon4.epf"
-var debug_pal_key := "mon.dat:monster.pal"
-var debug_epf_index := 208
-var debug_pal_index := 0
-var debug_color_offset := 160
-var debug_start_scale := Vector2(4, 4)
+#var debug_epf_key := "mon4.dat:mon4.epf"
+#var debug_pal_key := "mon.dat:monster.pal"
+#var debug_epf_index := 208
+#var debug_pal_index := 0
+#var debug_color_offset := 160
+#var debug_start_scale := Vector2(4, 4)
 
 ### Face
 #var debug_epf_key := "face0.dat:Face0.epf"
@@ -49,7 +49,15 @@ var debug_start_scale := Vector2(4, 4)
 #var debug_epf_index := 6
 #var debug_pal_index := 0
 #var debug_color_offset := 0
-#var debug_start_scale := Vector2(4, 4)
+#var debug_start_scale := Vector2(8, 8)
+
+### Hair
+var debug_epf_key := "hair0.dat:Hair0.epf"
+var debug_pal_key := "char.dat:Hair.pal"
+var debug_epf_index := 6
+var debug_pal_index := 0
+var debug_color_offset := 0
+var debug_start_scale := Vector2(8, 8)
 
 var current_epf_key := ""
 var current_pal_key := ""

@@ -15,7 +15,7 @@ var debug_tile_indices: Array[int] = []
 
 ## Palette Debug ##
 # 187 | AB Index 31123 PAL => 187
-var debug_pal_indices: Array[int] = []
+var debug_pal_indices: Array[int] = [0]
 
 ## Part Debug ##
 # i.e., {"Body": 55} - SetZe Robes
