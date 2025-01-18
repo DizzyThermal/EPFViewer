@@ -13,7 +13,8 @@ func create_pixel_data(
 		frame_index: int,
 		palette_index: int,
 		animated_color_offset: int=0,
-		initial_color_offset: int=0) -> PackedByteArray:
+		initial_color_offset: int=0,
+		offset_range: Array[int]=[]) -> PackedByteArray:
 	var frame := get_frame(frame_index)
 	var palette := pal.get_palette(palette_index)
 	var pixel_data := PackedByteArray()
@@ -22,6 +23,8 @@ func create_pixel_data(
 	for i in range(frame.width * frame.height):
 		var original_color_index := frame.raw_pixel_data.decode_u8(i)
 		var color_index := (original_color_index + initial_color_offset) % Resources.palette_color_count
+		if len(offset_range) > 0 and i not in offset_range:
+			color_index = original_color_index
 
 		for animation_range in palette.animation_ranges:
 			var animated_colors := []
