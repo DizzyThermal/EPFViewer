@@ -76,7 +76,7 @@ func get_frame(frame_index: int, read_mask=true, debug_frame: int=-1) -> NTK_Fra
 	var frame := NTK_Frame.new(left, top, right, bottom, width, height, raw_pixel_data, mask_image)
 	frames[frame_index] = frame
 
-	if debug_frame in Debug.debug_frame_indices:
+	if frame_index in Debug.debug_frame_indices:
 		print("DEBUG: EPF Frame[", frame_index, "]:")
 		print("DEBUG:   EPF Info:")
 		print("DEBUG:     Width: ", self.width)
