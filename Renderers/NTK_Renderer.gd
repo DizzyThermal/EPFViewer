@@ -112,6 +112,21 @@ func create_animation_spritesheet(
 
 	return sprite_sheet
 
+static func get_frame_from_dat(
+		epf_dat_name: String,
+		epf_name: String,
+		pal_dat_name: String,
+		pal_name: String,
+		frame_index: int=0,
+		palette_index: int=0) -> NTK_Frame:
+	var epf_dat := DatFileHandler.new(epf_dat_name)
+	var pal_dat := DatFileHandler.new(pal_dat_name)
+	var renderer := NTK_Renderer.new()
+	renderer.epfs.append(EpfFileHandler.new(epf_dat.get_file(epf_name)))
+	renderer.pal = PalFileHandler.new(pal_dat.get_file(pal_name))
+
+	return renderer.get_frame(frame_index, true)
+
 static func get_image_from_dat(
 		epf_dat_name: String,
 		epf_name: String,
