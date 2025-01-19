@@ -23,7 +23,7 @@ func create_pixel_data(
 	for i in range(frame.width * frame.height):
 		var original_color_index := frame.raw_pixel_data.decode_u8(i)
 		var color_index := (original_color_index + initial_color_offset) % Resources.palette_color_count
-		if len(offset_range) > 0 and i not in offset_range:
+		if len(offset_range) > 0 and original_color_index not in offset_range:
 			color_index = original_color_index
 
 		for animation_range in palette.animation_ranges:
@@ -52,13 +52,14 @@ func render_frame(
 		read_stencil: bool=true,
 		animated_color_offset: int=0,
 		initial_color_offset: int=0,
-		render_animated: bool=false) -> Image:
+		render_animated: bool=false,
+		offset_range: Array[int]=[]) -> Image:
 	var image_key := String.num(frame_index) + "-" + String.num(palette_index) + "-" + String.num(animated_color_offset) 
 	if image_key in images:
 		return images[image_key]
 
 	var frame := get_frame(frame_index, read_stencil)
-	var pixel_data := create_pixel_data(frame_index, palette_index, animated_color_offset, initial_color_offset)
+	var pixel_data := create_pixel_data(frame_index, palette_index, animated_color_offset, initial_color_offset, offset_range)
 	var frame_image := Image.create_from_data(frame.width, frame.height, false, Image.FORMAT_RGBA8, pixel_data)
 	if frame.mask_image and read_stencil:
 		var image := Image.create(frame.width, frame.height, false, Image.FORMAT_RGBA8)
@@ -146,9 +147,10 @@ static func get_image_with_file_handlers(
 		palette_index: int=0,
 		animated_color_offset: int=0,
 		initial_color_offset: int=0,
-		render_animated: bool=false) -> Image:
+		render_animated: bool=false,
+		offset_range: Array[int]=[]) -> Image:
 	var renderer := NTK_Renderer.new()
 	renderer.epfs.append(epf)
 	renderer.pal = pal
 
-	return renderer.render_frame(frame_index, palette_index, true, animated_color_offset, initial_color_offset, render_animated)
+	return renderer.render_frame(frame_index, palette_index, true, animated_color_offset, initial_color_offset, render_animated, offset_range)

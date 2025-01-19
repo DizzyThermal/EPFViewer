@@ -26,6 +26,8 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 @onready var epf_list := {}
 @onready var pal_list := {}
 
+var offset_range: Array[int] = [128, 129, 130, 131, 132, 133, 134, 135]
+
 # Debug Values (Set on load and when [TAB] is pressed)
 ## Flameblade
 #var debug_epf_key := "sword0.dat:Sword0.epf"
@@ -43,21 +45,21 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 #var debug_color_offset := 160
 #var debug_start_scale := Vector2(4, 4)
 
-### Face
-#var debug_epf_key := "face0.dat:Face0.epf"
-#var debug_pal_key := "char.dat:Face.pal"
-#var debug_epf_index := 6
-#var debug_pal_index := 0
-#var debug_color_offset := 0
-#var debug_start_scale := Vector2(8, 8)
-
-### Hair
-var debug_epf_key := "hair0.dat:Hair0.epf"
-var debug_pal_key := "char.dat:Hair.pal"
+## Face
+var debug_epf_key := "face0.dat:Face0.epf"
+var debug_pal_key := "char.dat:Face.pal"
 var debug_epf_index := 6
 var debug_pal_index := 0
 var debug_color_offset := 0
 var debug_start_scale := Vector2(8, 8)
+
+## Hair
+#var debug_epf_key := "hair0.dat:Hair0.epf"
+#var debug_pal_key := "char.dat:Hair.pal"
+#var debug_epf_index := 6
+#var debug_pal_index := 0
+#var debug_color_offset := 0
+#var debug_start_scale := Vector2(8, 8)
 
 var current_epf_key := ""
 var current_pal_key := ""
@@ -300,7 +302,9 @@ func _render(force_grid_render: bool=false) -> void:
 	var dot_these_palettes := []
 	for i in range(len(palette.colors)):
 		if i != 0 and i in frame.raw_pixel_data_array:
-			var dotted_index := (i + int(color_offset_spinbox.value)) % Resources.palette_color_count
+			var dotted_index := i
+			if len(offset_range) > 0 and i in offset_range:
+				dotted_index = (i + int(color_offset_spinbox.value)) % Resources.palette_color_count
 			dot_these_palettes.append(dotted_index)
 
 	if palette_updated or \
@@ -359,7 +363,9 @@ func _render(force_grid_render: bool=false) -> void:
 			epf_index_spinbox.value,
 			pal_index_spinbox.value,
 			animated_color_offset,
-			color_offset_spinbox.value))
+			color_offset_spinbox.value,
+			false,
+			offset_range))
 
 	if frame_texture:
 		clear_frame_container()
