@@ -10,6 +10,7 @@ var config_path := "res://config.json"
 var data_dir := ""
 var map_dir := ""
 var mnm_dir := ""
+var desktop_dir := ""
 
 enum EntityType {
 	Player,
@@ -33,6 +34,10 @@ func _init():
 	self.data_dir = config_json.data_dir.replace("\\", "/").replace("${HOME}", home_dir)
 	self.map_dir = config_json.map_dir.replace("\\", "/").replace("${HOME}", home_dir)
 	self.mnm_dir = config_json.mnm_dir.replace("\\", "/").replace("${HOME}", home_dir)
+	if OS.get_name() == "Windows":
+		self.desktop_dir = OS.get_environment("USERPROFILE") + "/Desktop/"
+	else:
+		self.desktop_dir = OS.get_environment("HOME") + "/Desktop/"
 
 	# Check NTK Data Directory
 	if not FileAccess.file_exists(self.data_dir + "/tile.dat"):
