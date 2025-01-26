@@ -43,35 +43,38 @@ func get_frame(frame_index: int, read_mask=true, debug_frame: int=-1) -> NTK_Fra
 	# Read Pixel Data
 	file_position = HEADER_SIZE + pixel_data_offset
 	var raw_pixel_data := read_bytes(width * height)
-	
+
 	# Read Mask Data
-	var mask_image := Image.create(width, height, false, Image.FORMAT_RGBA8)
-	if read_mask:
-		file_position = HEADER_SIZE + mask_data_offset
-		for i in range(height):
-			var total_pixels := 0
-			while true:
-				var pixel_count := read_u8()
-				if pixel_count == 0x0:
-					break
+	var mask_byte_array := PackedByteArray()
+	mask_byte_array.resize(width * height * 4)
+	file_position = HEADER_SIZE + mask_data_offset
+	var byte_offset := 0
+	for i in range(height):
+		var total_pixels := 0
+		while true:
+			var pixel_count := read_u8()
+			if pixel_count == 0x0:
+				break
 
-				var should_draw := false
-				if pixel_count > STENCIL_MASK:
-					should_draw = true
+			var should_draw := false
+			if pixel_count > STENCIL_MASK:
+				should_draw = true
 
-				if should_draw:
-					pixel_count = pixel_count ^ STENCIL_MASK
+			if should_draw:
+				pixel_count = pixel_count ^ STENCIL_MASK
 
-				for j in range(pixel_count):
-					var pixel_color := Color.TRANSPARENT
-					if should_draw:
-						pixel_color = Color.BLACK
-					mask_image.set_pixel(total_pixels, i, pixel_color)
-					total_pixels += 1
+			var pixel_color := Color.BLACK if should_draw else Color.TRANSPARENT
+			for j in range(pixel_count):
+				mask_byte_array.encode_u32(byte_offset, pixel_color.to_abgr32())
+				byte_offset += 4
+				total_pixels += 1
 
-			if total_pixels < width:
-				for j in range(width - total_pixels):
-					mask_image.set_pixel(total_pixels, i, Color.TRANSPARENT)
+		if total_pixels < width:
+			for j in range(width - total_pixels):
+				mask_byte_array.encode_u32(byte_offset, Color.TRANSPARENT.to_abgr32())
+				byte_offset += 4
+
+	var mask_image := Image.create_from_data(width, height, false, Image.FORMAT_RGBA8, mask_byte_array)
 
 	var frame := NTK_Frame.new(left, top, right, bottom, width, height, raw_pixel_data, mask_image)
 	frames[frame_index] = frame
@@ -88,7 +91,7 @@ func get_frame(frame_index: int, read_mask=true, debug_frame: int=-1) -> NTK_Fra
 		print("DEBUG:     Dimensions (WxH):  ", frame.width, " x ", frame.height)
 		if Debug.debug_show_pixel_data:
 			print("DEBUG:     Raw Pixel Bytes: ", frame.raw_pixel_data.to_int32_array())
-		if Debug.debug_show_pixel_data and frame.mask_image:
+		if Debug.debug_show_pixel_mask_data and frame.mask_image:
 			print("DEBUG:     Mask Image Bytes:", frame.mask_image.get_data())
 
 	return frames[frame_index]

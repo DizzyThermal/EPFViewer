@@ -26,7 +26,8 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 @onready var epf_list := {}
 @onready var pal_list := {}
 
-var offset_range: Array[int] = [128, 129, 130, 131, 132, 133, 134, 135]
+var offset_range: Array[int] = []
+#var offset_range: Array[int] = [128, 129, 130, 131, 132, 133, 134, 135]
 
 # Debug Values (Set on load and when [TAB] is pressed)
 ## Flameblade
@@ -118,14 +119,26 @@ func _process(delta) -> void:
 	if frame_sprite != null:
 		if Input.is_action_just_pressed("zoom-in") and \
 				frame_sprite.scale.x < max_frame_size and \
-				should_zoom():
+				over_sprite():
 			frame_sprite.scale += Vector2(1, 1)
 			current_scale = frame_sprite.scale
 		elif Input.is_action_just_pressed("zoom-out") and \
 				frame_sprite.scale.x > min_frame_size and \
-				should_zoom():
+				over_sprite():
 			frame_sprite.scale -= Vector2(1, 1)
 			current_scale = frame_sprite.scale
+		elif Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and \
+				over_sprite():
+			var frame_image := "-".join([
+				current_epf_key,
+				epf_index_spinbox.value,
+				current_pal_key,
+				pal_index_spinbox.value,
+				color_offset_spinbox.value,
+				# animated_color_offset, # Confusing for static images
+			]).replace(":", "-") + ".png"
+			if not FileAccess.file_exists(Resources.desktop_dir + frame_image):
+				Debug.save_png_to_desktop(frame_sprite.texture.get_image(), frame_image)
 
 	render_cooldown -= delta
 	if render_cooldown <= 0:
@@ -185,7 +198,7 @@ func populate_option_buttons() -> void:
 		if pal:
 			self.pal_options.add_item(pal)
 
-func should_zoom() -> bool:
+func over_sprite() -> bool:
 	var container_rect := frame_container.get_rect()
 	container_rect.position -= Vector2(300, 400)
 	container_rect.size += Vector2(600, 800)

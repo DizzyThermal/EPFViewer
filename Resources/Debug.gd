@@ -6,6 +6,7 @@ var debug_renderer_timings := true
 # 0 | Body0.epf Frame 0
 var debug_frame_indices: Array[int] = []
 var debug_show_pixel_data := false
+var debug_show_pixel_mask_data := false
 
 ## Tile Debug ##
 # Vector2i(14, 121) | Tangun (Animated Tile) => AB Index 31123
@@ -15,7 +16,7 @@ var debug_tile_indices: Array[int] = []
 
 ## Palette Debug ##
 # 187 | AB Index 31123 PAL => 187
-var debug_pal_indices: Array[int] = [0]
+var debug_pal_indices: Array[int] = []
 
 ## Part Debug ##
 # i.e., {"Body": 55} - SetZe Robes
