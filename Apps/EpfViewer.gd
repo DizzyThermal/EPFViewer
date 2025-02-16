@@ -27,7 +27,6 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 @onready var pal_list := {}
 
 var offset_range: Array[int] = []
-#var offset_range: Array[int] = [128, 129, 130, 131, 132, 133, 134, 135]
 
 # Debug Values (Set on load and when [TAB] is pressed)
 ## Flameblade
@@ -97,7 +96,7 @@ func _ready() -> void:
 			dat_threads.append(Thread.new())
 			dat_threads[-1].start(func(): self.process_dat(file_name))
 	
-	for i in range(48, 128):
+	for i in range(48, 136):
 		offset_range.append(i)
 	for i in range(176, 256):
 		offset_range.append(i)
