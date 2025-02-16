@@ -6,16 +6,32 @@ var tile_rect := Rect2i(0, 0, tile_size, tile_size)
 var palette_color_count := 256
 
 var config_path := "res://config.json"
+var game_db_path := "res://game.db"
 
 var data_dir := ""
 var map_dir := ""
+var local_map_dir := "res://Maps"
 var mnm_dir := ""
-var desktop_dir := ""
+
+# TODO: See if this is problematic for future items
+var offset_range: Array[int] = []
 
 enum EntityType {
 	Player,
 	Monster,
 	NPC,
+}
+
+enum Totem {
+	JUJAK = 0,
+	BAEKHO = 1,
+	HYUNMOO = 2,
+	CHUNGRYONG = 3,
+}
+
+enum Gender {
+	MALE = 0,
+	FEMALE = 1,
 }
 
 func _init():
@@ -34,10 +50,6 @@ func _init():
 	self.data_dir = config_json.data_dir.replace("\\", "/").replace("${HOME}", home_dir)
 	self.map_dir = config_json.map_dir.replace("\\", "/").replace("${HOME}", home_dir)
 	self.mnm_dir = config_json.mnm_dir.replace("\\", "/").replace("${HOME}", home_dir)
-	if OS.get_name() == "Windows":
-		self.desktop_dir = OS.get_environment("USERPROFILE") + "/Desktop/"
-	else:
-		self.desktop_dir = OS.get_environment("HOME") + "/Desktop/"
 
 	# Check NTK Data Directory
 	if not FileAccess.file_exists(self.data_dir + "/tile.dat"):
@@ -48,6 +60,12 @@ func _init():
 	if not FileAccess.file_exists(self.map_dir + "/TK000000.cmp"):
 		print("'", self.map_dir, "' is an invalid NTK map directory")
 		OS.kill(OS.get_process_id())
+	
+	# Generate Offset Range
+	for i in range(48, 136):
+		offset_range.append(i)
+	for i in range(176, 256):
+		offset_range.append(i)
 
 static func get_direction_string(direction : Vector2i):
 	if direction.x < 0:

@@ -388,8 +388,7 @@ func _render(force_grid_render: bool=false) -> void:
 			pal_index_spinbox.value,
 			animated_color_offset,
 			color_offset_spinbox.value,
-			false,
-			offset_range))
+			false))
 
 	if frame_texture:
 		clear_frame_container()
