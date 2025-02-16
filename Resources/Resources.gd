@@ -62,7 +62,7 @@ func _init():
 		OS.kill(OS.get_process_id())
 	
 	# Generate Offset Range
-	for i in range(48, 136):
+	for i in range(48, 144):
 		offset_range.append(i)
 	for i in range(176, 256):
 		offset_range.append(i)
