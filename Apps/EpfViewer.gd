@@ -29,6 +29,14 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 var offset_range: Array[int] = []
 
 # Debug Values (Set on load and when [TAB] is pressed)
+## Farmer armor
+var debug_epf_key := "body0.dat:Body0.epf"
+var debug_pal_key := "char.dat:Body.pal"
+var debug_epf_index := 326
+var debug_pal_index := 0
+var debug_color_offset := 0
+var debug_start_scale := Vector2(4, 4)
+
 ## Flameblade
 #var debug_epf_key := "sword0.dat:Sword0.epf"
 #var debug_pal_key := "char.dat:Sword.pal"
@@ -38,12 +46,12 @@ var offset_range: Array[int] = []
 #var debug_start_scale := Vector2(8, 8)
 
 ## Ox Boss
-var debug_epf_key := "mon4.dat:mon4.epf"
-var debug_pal_key := "mon.dat:monster.pal"
-var debug_epf_index := 208
-var debug_pal_index := 0
-var debug_color_offset := 160
-var debug_start_scale := Vector2(4, 4)
+#var debug_epf_key := "mon4.dat:mon4.epf"
+#var debug_pal_key := "mon.dat:monster.pal"
+#var debug_epf_index := 208
+#var debug_pal_index := 0
+#var debug_color_offset := 160
+#var debug_start_scale := Vector2(4, 4)
 
 ## Face
 #var debug_epf_key := "face0.dat:Face0.epf"
