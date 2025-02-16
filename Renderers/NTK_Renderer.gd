@@ -20,21 +20,21 @@ func create_pixel_data(
 	var pixel_data := PackedByteArray()
 	pixel_data.resize(frame.width * frame.height * 4)
 	
+	var animated_colors := []
+	for animation_range in palette.animation_ranges:
+		var min_index = animation_range.min_index
+		var max_index = animation_range.max_index
+		animated_colors.append(range(min_index, max_index+1))
+
 	for i in range(frame.width * frame.height):
 		var original_color_index := frame.raw_pixel_data.decode_u8(i)
 		var color_index := (original_color_index + initial_color_offset) % Resources.palette_color_count
 		if len(offset_range) > 0 and original_color_index not in offset_range:
 			color_index = original_color_index
-
-		for animation_range in palette.animation_ranges:
-			var animated_colors := []
-			var min_index = animation_range.min_index
-			var max_index = animation_range.max_index
-			animated_colors.append_array(range(min_index, max_index+1))
-
-			if color_index in animated_colors:
-				var animated_colors_index := (animated_colors.find(original_color_index) + animated_color_offset) % len(animated_colors)
-				color_index = animated_colors[animated_colors_index]
+		for animated_range in animated_colors:
+			if color_index in animated_range:
+				var animated_colors_index = (animated_range.find(color_index) + animated_color_offset) % len(animated_range)
+				color_index = animated_range[animated_colors_index]
 				break
 
 		var color := palette.colors[color_index]
