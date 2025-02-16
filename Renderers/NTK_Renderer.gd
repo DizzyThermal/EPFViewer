@@ -42,14 +42,13 @@ func create_pixel_data(
 
 	return pixel_data
 
-func get_frame(frame_index: int, read_stencil=true) -> NTK_Frame:
+func get_frame(frame_index: int) -> NTK_Frame:
 	var indices := Indices.new(frame_index, epfs)
-	return epfs[indices.epf_index].get_frame(indices.frame_index, read_stencil, frame_index)
+	return epfs[indices.epf_index].get_frame(indices.frame_index, frame_index)
 
 func render_frame(
 		frame_index: int,
 		palette_index: int=0,
-		read_stencil: bool=true,
 		animated_color_offset: int=0,
 		initial_color_offset: int=0,
 		render_animated: bool=false,
@@ -58,10 +57,10 @@ func render_frame(
 	if image_key in images:
 		return images[image_key]
 
-	var frame := get_frame(frame_index, read_stencil)
+	var frame := get_frame(frame_index)
 	var pixel_data := create_pixel_data(frame_index, palette_index, animated_color_offset, initial_color_offset, offset_range)
 	var frame_image := Image.create_from_data(frame.width, frame.height, false, Image.FORMAT_RGBA8, pixel_data)
-	if frame.mask_image and read_stencil:
+	if frame.mask_image:
 		var image := Image.create(frame.width, frame.height, false, Image.FORMAT_RGBA8)
 		var mask_rect := Rect2i(0, 0, frame.mask_image.get_width(), frame.mask_image.get_height())
 		image.blit_rect_mask(frame_image, frame.mask_image, mask_rect, Vector2i(0, 0))
@@ -75,13 +74,12 @@ func render_animated_frame(
 		frame_index: int,
 		animation_count: int,
 		palette_index: int=0,
-		read_stencil: bool=true,
 		color_offset: int=0) -> Image:
-	var frame := get_frame(frame_index, read_stencil)
+	var frame := get_frame(frame_index)
 	var animated_spritesheet := Image.create(frame.width * animation_count, frame.height, false, Image.FORMAT_RGBA8)
 	for i in range(animation_count):
 		animated_spritesheet.blit_rect(
-			render_frame(frame_index, palette_index, read_stencil, -i),
+			render_frame(frame_index, palette_index, -i),
 			Rect2i(0, 0, frame.width, frame.height),
 			Vector2i(i * frame.width, 0))
 
@@ -125,7 +123,7 @@ static func get_frame_from_dat(
 	renderer.epfs.append(EpfFileHandler.new(epf_dat.get_file(epf_name)))
 	renderer.pal = PalFileHandler.new(pal_dat.get_file(pal_name))
 
-	return renderer.get_frame(frame_index, true)
+	return renderer.get_frame(frame_index)
 
 static func get_image_from_dat(
 		epf_dat_name: String,
@@ -168,4 +166,4 @@ static func get_image_with_file_handlers(
 	renderer.epfs.append(epf)
 	renderer.pal = pal
 
-	return renderer.render_frame(frame_index, palette_index, true, animated_color_offset, initial_color_offset, render_animated, offset_range)
+	return renderer.render_frame(frame_index, palette_index, animated_color_offset, initial_color_offset, render_animated, offset_range)
