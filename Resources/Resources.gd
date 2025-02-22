@@ -12,6 +12,7 @@ var data_dir := ""
 var map_dir := ""
 var local_map_dir := "res://Maps"
 var mnm_dir := ""
+var desktop_dir := ""
 
 # TODO: See if this is problematic for future items
 var offset_range: Array[int] = []
@@ -35,6 +36,11 @@ enum Gender {
 }
 
 func _init():
+	if OS.get_name() == "Windows":
+		desktop_dir = OS.get_environment("USERPROFILE") + "/Desktop/"
+	else:
+		desktop_dir = OS.get_environment("HOME") + "/Desktop/"
+
 	if not ResourceLoader.exists(config_path):
 		var template_config := FileAccess.open("res://config.json.template", FileAccess.READ)
 		var config := FileAccess.open("res://config.json", FileAccess.WRITE)

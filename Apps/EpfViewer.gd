@@ -29,13 +29,21 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 var offset_range: Array[int] = []
 
 # Debug Values (Set on load and when [TAB] is pressed)
-## Farmer armor
-var debug_epf_key := "body0.dat:Body0.epf"
+## Jade Scale Mail
+var debug_epf_key := "body6.dat:Body6.epf"
 var debug_pal_key := "char.dat:Body.pal"
-var debug_epf_index := 326
+var debug_epf_index := 1206
 var debug_pal_index := 0
 var debug_color_offset := 0
 var debug_start_scale := Vector2(4, 4)
+
+## Farmer armor
+#var debug_epf_key := "body0.dat:Body0.epf"
+#var debug_pal_key := "char.dat:Body.pal"
+#var debug_epf_index := 326
+#var debug_pal_index := 0
+#var debug_color_offset := 0
+#var debug_start_scale := Vector2(4, 4)
 
 ## Flameblade
 #var debug_epf_key := "sword0.dat:Sword0.epf"
@@ -172,9 +180,15 @@ func _process(delta) -> void:
 		render_cooldown = 1.4 / animation_speed_slider.value
 
 	if Input.is_action_just_pressed("increment_spinbox") and focused_spinbox:
-		focused_spinbox.value += 1
+		if focused_spinbox == color_offset_spinbox:
+			focused_spinbox.value += 8
+		else:
+			focused_spinbox.value += 1
 	elif Input.is_action_just_pressed("decrement_spinbox") and focused_spinbox:
-		focused_spinbox.value -= 1
+		if focused_spinbox == color_offset_spinbox:
+			focused_spinbox.value -= 8
+		else:
+			focused_spinbox.value -= 1
 
 func _on_focus_changed(control: Control) -> void:
 	var parent_control := control.get_parent()
