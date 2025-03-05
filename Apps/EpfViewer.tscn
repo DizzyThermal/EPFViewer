@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://b680ng7y6g8ol"]
 
-[ext_resource type="Script" path="res://Apps/EpfViewer.gd" id="1_n58qr"]
+[ext_resource type="Script" uid="uid://bj1cujbbg72dc" path="res://Apps/EpfViewer.gd" id="1_n58qr"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bk01i"]
 
