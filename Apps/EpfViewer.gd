@@ -247,7 +247,7 @@ func load_pal(pal_key: String, reset: bool=false) -> void:
 	if reset:
 		pal_index_spinbox.value = 0
 		pal_index_spinbox.max_value = len(pal_list[pal_key].palettes)
-		$UI/PalIndexLabel.text = "Palette Index (0-" + String.num(pal_index_spinbox.max_value - 1) + "):"
+		$UI/PalIndexLabel.text = "Palette Index (0-" + str(int(pal_index_spinbox.max_value - 1)) + "):"
 
 func create_color_rect(
 		color: Color,
@@ -298,7 +298,7 @@ func load_frame(epf_key: String, reset: bool=false) -> void:
 	if reset:
 		epf_index_spinbox.value = 0
 		epf_index_spinbox.max_value = epf_list[epf_key].frame_count
-		$UI/EpfIndexLabel.text = "Frame Index (0-" + String.num(epf_index_spinbox.max_value - 1) + ")"
+		$UI/EpfIndexLabel.text = "Frame Index (0-" + str(int(epf_index_spinbox.max_value - 1)) + ")"
 
 func clear_frame_container() -> void:
 	for child in frame_container.get_children():

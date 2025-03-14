@@ -51,7 +51,7 @@ func render_frame(
 		animated_color_offset: int=0,
 		initial_color_offset: int=0,
 		render_animated: bool=false) -> Image:
-	var image_key := String.num(frame_index) + "-" + String.num(palette_index) + "-" + String.num(animated_color_offset) + "-" + String.num(initial_color_offset)
+	var image_key := str(frame_index) + "-" + str(palette_index) + "-" + str(animated_color_offset) + "-" + str(initial_color_offset)
 	if image_key in images:
 		return images[image_key]
 
