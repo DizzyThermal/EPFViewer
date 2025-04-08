@@ -2,9 +2,9 @@ class_name EpfFileHandler extends NTK_FileHandler
 
 const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 
-var HEADER_SIZE := 0xC
-var FRAME_SIZE := 0x10
-var STENCIL_MASK := 0x80
+const HEADER_SIZE := 0xC
+const FRAME_SIZE := 0x10
+const STENCIL_MASK := 0x80
 
 var frame_count := 0
 var frames := {}
@@ -16,11 +16,18 @@ var pixel_data_length := 0
 
 func _init(file):
 	super(file)
-	frame_count = read_s16()
-	width = read_s16()
-	height = read_s16()
-	unknown = read_s16()
-	pixel_data_length = read_u32()
+	
+	var file_position: int = 0
+	frame_count = read_s16(file_position)
+	file_position += 2
+	width = read_s16(file_position)
+	file_position += 2
+	height = read_s16(file_position)
+	file_position += 2
+	unknown = read_s16(file_position)
+	file_position += 2
+	pixel_data_length = read_u32(file_position)
+	file_position += 4
 
 func get_frame(frame_index: int, read_mask=true, debug_frame: int=-1) -> NTK_Frame:
 	# Frame Cache
@@ -28,21 +35,29 @@ func get_frame(frame_index: int, read_mask=true, debug_frame: int=-1) -> NTK_Fra
 		return frames[frame_index]
 	
 	# Read to Frame Data
-	file_position = HEADER_SIZE + pixel_data_length + (frame_index * FRAME_SIZE)
-	var top := read_s16()
-	var left := read_s16()
-	var bottom := read_s16()
-	var right := read_s16()
+	var file_position: int = HEADER_SIZE + pixel_data_length + (frame_index * FRAME_SIZE)
+	var top := read_s16(file_position)
+	file_position += 2
+	var left := read_s16(file_position)
+	file_position += 2
+	var bottom := read_s16(file_position)
+	file_position += 2
+	var right := read_s16(file_position)
+	file_position += 2
 	
 	var width := right - left
 	var height := bottom - top
 	
-	var pixel_data_offset := read_u32()
-	var mask_data_offset := read_u32()
+	var pixel_data_offset := read_u32(file_position)
+	file_position += 4
+	var mask_data_offset := read_u32(file_position)
+	file_position += 4
 	
 	# Read Pixel Data
 	file_position = HEADER_SIZE + pixel_data_offset
-	var raw_pixel_data := read_bytes(width * height)
+	var raw_pixel_data_length := width * height
+	var raw_pixel_data := read_bytes(file_position, raw_pixel_data_length)
+	file_position += raw_pixel_data_length
 
 	# Read Mask Data
 	var mask_byte_array := PackedByteArray()
@@ -52,7 +67,8 @@ func get_frame(frame_index: int, read_mask=true, debug_frame: int=-1) -> NTK_Fra
 	for i in range(height):
 		var total_pixels := 0
 		while true:
-			var pixel_count := read_u8()
+			var pixel_count := read_u8(file_position)
+			file_position += 1
 			if pixel_count == 0x0:
 				break
 

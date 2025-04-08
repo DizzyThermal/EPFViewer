@@ -38,53 +38,68 @@ func decode_bytes(
 
 	decoded_bytes.encode_u32(0, (first ^ (first ^ second) & 0x55555555))
 
-	return decoded_bytes	
+	return decoded_bytes
 		
 func _init(file, decode=true):
 	super(file)
+	var file_position: int = 0
+
 	var bytes := PackedByteArray()
 	bytes.resize(file_size / 2)
 	if decode:
 		var offset := 0
 		for i in range(file_size / 8):
-			var decoded_bytes := decode_bytes(offset, read_bytes(8))
+			var decoded_bytes := decode_bytes(offset, read_bytes(file_position, 8))
+			file_position += 8
 			for j in range(4):
 				bytes.encode_u8((i * 4) + j, decoded_bytes.decode_u8(3 - j))
 			offset += 4
 		self.file_bytes = bytes
-		self.file_position = 0
+		file_position = 0
 	
-	effect_count = read_u32()
+	effect_count = read_u32(file_position)
+	file_position += 4
 	for i in range(effect_count):
-		var effect_index := read_u32()
-		var frame_count := read_u32()
+		var effect_index := read_u32(file_position)
+		file_position += 4
+		var frame_count := read_u32(file_position)
+		file_position += 4
 		
 		if frame_count == 0:
 			file_position += 8
-			frame_count = read_u32()
+			frame_count = read_u32(file_position)
+			file_position += 4
 			file_position += 8
 		else:
 			file_position += 20
 		
 		var effect_frames: Array[NTK_EffectFrame] = []
 		for j in range(frame_count):
-			var frame_index := read_s32()
+			var frame_index := read_s32(file_position)
+			file_position += 4
 			if frame_index == -1:
 				while frame_index != i + 1:
 					if frame_index == -1:
 						file_position += 12
 					else:
-						var frame_delay := read_s32()
-						var palette_index := read_u32()
-						var unknown := read_u32()
+						var frame_delay := read_s32(file_position)
+						file_position += 4
+						var palette_index := read_u32(file_position)
+						file_position += 4
+						var unknown := read_u32(file_position)
+						file_position += 4
 						effect_frames.append(NTK_EffectFrame.new(frame_index, frame_delay, palette_index, unknown))
-					frame_index = read_s32()
+					frame_index = read_s32(file_position)
+					file_position += 4
 				
 				file_position -= 4
 				break
-			var frame_delay := read_s32()
-			var palette_index := read_u32()
-			var unknown := read_u32()
+			var frame_delay := read_s32(file_position)
+			file_position += 4
+			var palette_index := read_u32(file_position)
+			file_position += 4
+			var unknown := read_u32(file_position)
+			file_position += 4
 			
 			effect_frames.append(NTK_EffectFrame.new(frame_index, frame_delay, palette_index, unknown))
 		effects[i] = NTK_Effect.new(effect_index, frame_count, effect_frames)

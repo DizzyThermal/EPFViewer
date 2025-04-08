@@ -8,7 +8,11 @@ var palette_indices: Array[int] = []
 
 func _init(file):
 	super(file)
-	effect_count = read_u32()
+	var file_position: int = 0
+	
+	effect_count = read_u32(file_position)
+	file_position += 4
 
 	for i in range(effect_count):
-		palette_indices.append(read_u32())
+		palette_indices.append(read_u32(file_position))
+		file_position += 4

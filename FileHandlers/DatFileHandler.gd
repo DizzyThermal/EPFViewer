@@ -10,14 +10,21 @@ var files: Array[DatFile] = []
 
 func _init(file):
 	super(file)
-	file_count = read_u32() - 1
+	var file_position: int = 0
+
+	file_count = read_u32(file_position) - 1
+	file_position += 4
 
 	for i in range(file_count):
-		var start_data_location := read_u32()
-		var file_name := read_utf8(FILE_NAME_LENGTH)
-		var unknown := read_u8()
+		var start_data_location := read_u32(file_position)
+		file_position += 4
+		var file_name := read_utf8(file_position, FILE_NAME_LENGTH)
+		file_position += FILE_NAME_LENGTH
+		var unknown := read_u8(file_position)
+		file_position += 1
 		var next_file_position := file_position
-		var end_data_location := read_u32()
+		var end_data_location := read_u32(file_position)
+		file_position += 4
 		var size := end_data_location - start_data_location
 		file_position = start_data_location
 		var file_data := file_bytes.slice(file_position, file_position + size)
