@@ -36,11 +36,6 @@ enum Gender {
 }
 
 func _init():
-	if OS.get_name() == "Windows":
-		desktop_dir = OS.get_environment("USERPROFILE") + "/Desktop/"
-	else:
-		desktop_dir = OS.get_environment("HOME") + "/Desktop/"
-
 	if not ResourceLoader.exists(config_path):
 		var template_config := FileAccess.open("res://config.json.template", FileAccess.READ)
 		var config := FileAccess.open("res://config.json", FileAccess.WRITE)
@@ -48,6 +43,11 @@ func _init():
 		config.flush()
 		config.close()
 		template_config.close()
+
+	if OS.get_name() == "Windows":
+		desktop_dir = OS.get_environment("USERPROFILE") + "/Desktop/"
+	else:
+		desktop_dir = OS.get_environment("HOME") + "/Desktop/"
 
 	var config_file := FileAccess.open(config_path, FileAccess.READ)
 	var config_json = JSON.parse_string(config_file.get_as_text())

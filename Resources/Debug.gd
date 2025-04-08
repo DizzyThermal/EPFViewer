@@ -35,15 +35,9 @@ var debug_map_tilemap = false
 
 # Save Image to Desktop
 func save_png_to_desktop(image: Image, image_name: String="test.png", sub_directory: String="") -> void:
-	var desktop_dir := ""
-	if OS.get_name() == "Windows":
-		desktop_dir = OS.get_environment("USERPROFILE") + "/Desktop/" + sub_directory
-	else:
-		desktop_dir = OS.get_environment("HOME") + "/Desktop/" + sub_directory
-
 	if not image_name.ends_with(".png"):
 		image_name = image_name + ".png"
 	if sub_directory and not sub_directory.begins_with("/"):
 		sub_directory = "/" + sub_directory
-	image.save_png(desktop_dir + "/" + image_name)
+	image.save_png(Resources.desktop_dir + "/" + image_name)
 	print("Saved PNG to ./Desktop", sub_directory, "/", image_name)
