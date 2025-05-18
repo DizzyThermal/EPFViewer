@@ -400,8 +400,8 @@ func get_option_index(
 
 func match_palette() -> void:
 	var epf_key = epf_options.get_item_text(epf_options.selected)
-	if epf_key in Resources.EpfPals:
-		var pal_key = Resources.EpfPals[epf_key]
+	if epf_key in ViewerResources.EpfPals:
+		var pal_key = ViewerResources.EpfPals[epf_key]
 		pal_options.select(get_option_index(pal_options, pal_key))
 
 func _on_epf_options(index):
