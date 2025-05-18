@@ -13,14 +13,15 @@ config_version=5
 config/name="EPFViewer"
 config/description="A Godot 4.x project with EPF Viewing Applicationss"
 config/version="1.0.0"
-run/main_scene="res://Apps/EpfViewer.tscn"
+run/main_scene="res://EPFViewer.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.png"
 
 [autoload]
 
-Debug="*res://Resources/Debug.gd"
+Database="*res://Resources/Database.gd"
 Resources="*res://Resources/Resources.gd"
+Debug="*res://Resources/Debug.gd"
 
 [display]
 

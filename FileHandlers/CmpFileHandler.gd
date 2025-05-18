@@ -61,8 +61,6 @@ func save_to_file(file_path: String) -> void:
 	map_data.resize(len(tiles) * 6)
 	var map_data_pointer := 0
 	for tile in tiles:
-		if tile.ab_index == 65535:
-			print()
 		map_data.encode_u16(map_data_pointer, max(tile.ab_index, 0))
 		map_data.encode_u16(map_data_pointer + 2, int(tile.unpassable_tile))
 		map_data.encode_u16(map_data_pointer + 4, tile.sobj_index + 1)

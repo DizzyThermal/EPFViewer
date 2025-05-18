@@ -1,12 +1,20 @@
 extends Node
 
 ## Debug ##
-var debug_renderer_timings := true
+var debug_renderer_timings := false
+
+## Motion Debug ##
+var debug_motions := false
+
+## Character Debug ##
+var debug_character_movement := false
+
+## Mob Debug ##
+var debug_mob_movement := false
 
 # 0 | Body0.epf Frame 0
 var debug_frame_indices: Array[int] = []
 var debug_show_pixel_data := false
-var debug_show_pixel_mask_data := false
 
 ## Tile Debug ##
 # Vector2i(14, 121) | Tangun (Animated Tile) => AB Index 31123
@@ -28,6 +36,7 @@ var debug_part_dsc := {}
 
 ## Mob Debug ##
 var debug_mob_indices: Array[int] = []
+var debug_mob_show_frames: bool = false
 
 ## Map Debug ##
 # Saves PNG of rendered TileMap if true
