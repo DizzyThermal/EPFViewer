@@ -5,6 +5,7 @@ var tile_size_vector := Vector2i(tile_size, tile_size)
 var tile_rect := Rect2i(0, 0, tile_size, tile_size)
 var palette_color_count := 256
 
+var data_dir := Database.get_config_item_value("data_dir")
 var desktop_dir := ""
 
 # TODO: See if this is problematic for future items

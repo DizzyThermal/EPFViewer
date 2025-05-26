@@ -5,7 +5,7 @@ var file_size := 0
 
 var mutex: Mutex = Mutex.new()
 
-func _init(file, data_directory=Database.get_config_item_value("data_dir")):
+func _init(file, data_directory=Resources.data_dir):
 	if file is PackedByteArray:
 		file_bytes = file
 	elif "/" in file or "\\" in file:

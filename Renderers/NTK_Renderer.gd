@@ -109,8 +109,6 @@ func render_animated_frame(
 		palette_index: int=0,
 		color_offset: int=0) -> Image:
 	var frame := get_frame(frame_index)
-	if frame.width == 0:
-		print("D")
 	var animated_spritesheet := Image.create_empty(
 		frame.width * animation_count, frame.height, false, Image.FORMAT_RGBA8)
 	for i in range(animation_count):
@@ -132,8 +130,6 @@ func create_animation_spritesheet(
 		animation_images.append(render_frame(frame_index, palette_index))
 
 	var pivot := Pivot.get_pivot(frames)
-	if pivot.width == 0:
-		print("A")
 	var sprite_sheet := Image.create_empty(
 		pivot.width * len(animation_images), pivot.height, false, Image.FORMAT_RGBA8)
 	for offset in range(len(animation_images)):
