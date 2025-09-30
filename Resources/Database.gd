@@ -45,12 +45,12 @@ func _init() -> void:
 	database_initialized = true
 
 func table_exists(table_name: String) -> bool:
-	var table_exists: bool = false
+	var does_table_exist: bool = false
 	mutex.lock()
 	db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='" + table_name + "';")
-	table_exists = len(db.query_result) > 0
+	does_table_exist = len(db.query_result) > 0
 	mutex.unlock()
-	return table_exists
+	return does_table_exist
 
 func get_config_item_value(config_key: String) -> String:
 	var config_value: String = ""
