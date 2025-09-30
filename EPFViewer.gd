@@ -60,6 +60,7 @@ var current_color_offset := 0
 
 var render_cooldown := 0.0
 var focused_spinbox: SpinBox = null
+var spinbox_change_cooldown := 0.0
 
 var dat_files: Array[String] = []
 var mutex: Mutex = Mutex.new()
@@ -136,16 +137,23 @@ func _process(delta) -> void:
 			_render()
 		render_cooldown = 1.4 / animation_speed_slider.value
 
-	if Input.is_action_just_pressed("increment_spinbox") and focused_spinbox:
-		if focused_spinbox == color_offset_spinbox:
-			focused_spinbox.value += 8
-		else:
-			focused_spinbox.value += 1
-	elif Input.is_action_just_pressed("decrement_spinbox") and focused_spinbox:
-		if focused_spinbox == color_offset_spinbox:
-			focused_spinbox.value -= 8
-		else:
-			focused_spinbox.value -= 1
+	spinbox_change_cooldown -= delta
+	
+	if Input.is_action_just_pressed("increment_spinbox") or Input.is_action_just_pressed("decrement_spinbox"):
+		spinbox_change_cooldown = 0
+
+	if spinbox_change_cooldown <= 0:
+		spinbox_change_cooldown = 0.1
+		if Input.is_action_pressed("increment_spinbox") and focused_spinbox:
+			if focused_spinbox == color_offset_spinbox:
+				focused_spinbox.value += 8
+			else:
+				focused_spinbox.value += 1
+		elif Input.is_action_pressed("decrement_spinbox") and focused_spinbox:
+			if focused_spinbox == color_offset_spinbox:
+				focused_spinbox.value -= 8
+			else:
+				focused_spinbox.value -= 1
 
 func _on_focus_changed(control: Control) -> void:
 	var parent_control := control.get_parent()
