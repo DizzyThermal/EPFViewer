@@ -43,7 +43,7 @@ func _init():
 		desktop_dir = OS.get_environment("HOME") + "/Desktop/"
 
 	# Generate Offset Range
-	for i in range(48, 160):
+	for i in range(48, 176):
 		offset_range.append(i)
 	for i in range(176, 256):
 		offset_range.append(i)

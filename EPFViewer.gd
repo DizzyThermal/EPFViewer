@@ -30,13 +30,21 @@ var offset_range: Array[int] = []
 
 # Debug Values (Set on load)
 
-## Flameblade
-var debug_epf_key := "sword0.dat:Sword0.epf"
-var debug_pal_key := "char.dat:Sword.pal"
-var debug_epf_index := 86
+## Bandit
+var debug_epf_key := "mon7.dat:mon7.epf"
+var debug_pal_key := "mon.dat:monster.pal"
+var debug_epf_index := 178
 var debug_pal_index := 0
 var debug_color_offset := 0
-var debug_start_scale := Vector2(8, 8)
+var debug_start_scale := Vector2(4, 4)
+
+## Flameblade
+#var debug_epf_key := "sword0.dat:Sword0.epf"
+#var debug_pal_key := "char.dat:Sword.pal"
+#var debug_epf_index := 86
+#var debug_pal_index := 0
+#var debug_color_offset := 0
+#var debug_start_scale := Vector2(8, 8)
 
 ## Ox Boss
 #var debug_epf_key := "mon4.dat:mon4.epf"
@@ -143,7 +151,7 @@ func _process(delta) -> void:
 		spinbox_change_cooldown = 0
 
 	if spinbox_change_cooldown <= 0:
-		spinbox_change_cooldown = 0.1
+		spinbox_change_cooldown = 0.2
 		if Input.is_action_pressed("increment_spinbox") and focused_spinbox:
 			if focused_spinbox == color_offset_spinbox:
 				focused_spinbox.value += 8
