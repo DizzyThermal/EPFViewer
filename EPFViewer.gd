@@ -9,6 +9,9 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 @onready var epf_options: OptionButton = $UI/EpfOptions
 @onready var epf_index_spinbox: SpinBox = $UI/EpfIndexSpinbox
 
+@onready var type_index_label: Label = $UI/TypeIndexLabel
+@onready var type_index_spinbox: SpinBox = $UI/TypeIndexSpinbox
+
 @onready var frame_container: CenterContainer = $UI/FrameContainer
 
 @onready var pal_options: OptionButton = $UI/PalOptions
@@ -27,6 +30,11 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 @onready var pal_list := {}
 
 var offset_range: Array[int] = []
+
+# Renderers
+var renderer_threads: Array[Thread] = []
+
+var mob_renderer: NTK_MobRenderer
 
 # Debug Values (Set on load)
 
@@ -107,6 +115,32 @@ func _ready() -> void:
 			color_offset_spinbox.value = debug_color_offset
 		_render(true)
 		current_scale = debug_start_scale
+
+	# Create Renderers
+	renderer_threads.append(Thread.new())
+	renderer_threads[-1].start(func(): self.mob_renderer = NTK_MobRenderer.new())
+
+	# Wait for all renderer threads to finish
+	var all_finished := false
+	while not all_finished:
+		all_finished = true
+		for renderer_thread in renderer_threads:
+			if renderer_thread.is_alive():
+				all_finished = false
+				break
+	for thread in renderer_threads:
+		thread.wait_to_finish()
+	renderer_threads.clear()
+
+	var mon_regex = RegEx.new()
+	mon_regex.compile("mon[0-9]*.dat:mon[0-9]*.epf")
+	if mon_regex.search(current_epf_key):
+		type_index_label.visible = true
+		type_index_spinbox.visible = true
+		type_index_label.text = "Monster Index (0-" + str(self.mob_renderer.dna.mob_count) + "):"
+	else:
+		type_index_label.visible = false
+		type_index_spinbox.visible = false
 
 func _process(delta) -> void:
 	if frame_sprite != null:
