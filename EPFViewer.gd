@@ -36,7 +36,9 @@ var offset_range: Array[int] = []
 var renderer_threads: Array[Thread] = []
 
 var mob_renderer: NTK_MobRenderer
+var effect_renderer: NTK_EffectRenderer
 var update_from_type: bool = true
+var updating_epf_index: bool = false
 
 # Debug Values (Set on load)
 
@@ -107,6 +109,8 @@ func _ready() -> void:
 	# Create Renderers
 	renderer_threads.append(Thread.new())
 	renderer_threads[-1].start(func(): self.mob_renderer = NTK_MobRenderer.new())
+	renderer_threads.append(Thread.new())
+	renderer_threads[-1].start(func(): self.effect_renderer = NTK_EffectRenderer.new())
 
 	# Wait for all renderer threads to finish
 	var all_finished := false
@@ -133,7 +137,7 @@ func _ready() -> void:
 			color_offset_spinbox.value = debug_color_offset
 		_render(true)
 		current_scale = debug_start_scale
-		update_type_spinbox()
+		update_type_spinbox(epf_index_spinbox.value)
 
 func _process(delta) -> void:
 	if frame_sprite != null:
@@ -190,22 +194,38 @@ func _process(delta) -> void:
 			else:
 				focused_spinbox.value -= 1
 
-func update_type_spinbox() -> void:
+func update_type_spinbox(frame_index: int) -> void:
 	var mon_regex = RegEx.new()
 	mon_regex.compile("mon[0-9]*.dat:mon([0-9])*.epf")
 	var mon_search := mon_regex.search(current_epf_key)
+	var efx_regex = RegEx.new()
+	efx_regex.compile("efx[0-9]*.dat:EFFECT([0-9])*.epf")
+	var efx_search := efx_regex.search(current_epf_key)
 	if mon_search:
 		type_index_label.text = "Monster Index (0-" + str(self.mob_renderer.dna.mob_count - 1) + "):"
 		type_index_label.visible = true
 		# Determine Mob Index from Frame Index
 		var epf_index: int = int(mon_search.strings[1])
-		var frame_index: int = int(epf_index_spinbox.value)
+		if frame_index < 0:
+			epf_index -= 1
+		var total_frames: int = 0
 		var global_frame_index: int = 0
 		for epf_idx in range(epf_index + 1):
+			total_frames += mob_renderer.epfs[epf_idx].frame_count
 			if epf_idx < epf_index:
 				global_frame_index += mob_renderer.epfs[epf_idx].frame_count
+			elif frame_index < 0:
+				global_frame_index += mob_renderer.epfs[epf_idx].frame_count - 1
+				break
 			else:
 				global_frame_index += frame_index
+				break
+		if global_frame_index >= total_frames:
+			epf_index += 1
+			var epf_option_str: String = "mon%d.dat:mon%d.epf" % [epf_index, epf_index]
+			epf_options.select(get_option_index(epf_options, epf_option_str))
+			current_epf_key = epf_option_str
+			load_frame(current_epf_key, true)
 		var mob_index: int = -1
 		for mob_idx in range(mob_renderer.dna.mob_count):
 			if mob_index >= 0:
@@ -225,7 +245,51 @@ func update_type_spinbox() -> void:
 
 		type_index_spinbox.min_value = 0
 		type_index_spinbox.max_value = self.mob_renderer.dna.mob_count - 1
+		self.updating_epf_index = true
 		type_index_spinbox.value = mob_index
+		self.updating_epf_index = false
+		type_index_spinbox.visible = true
+	elif efx_search:
+		type_index_label.text = "Effect Index (0-" + str(self.effect_renderer.efx.effect_count - 1) + "):"
+		type_index_label.visible = true
+		# Determine Effect Index from Frame Index
+		var epf_index: int = int(efx_search.strings[1])
+		if frame_index < 0:
+			epf_index -= 1
+		var total_frames: int = 0
+		var global_frame_index: int = 0
+		for epf_idx in range(epf_index + 1):
+			total_frames += effect_renderer.epfs[epf_idx].frame_count
+			if epf_idx < epf_index:
+				global_frame_index += effect_renderer.epfs[epf_idx].frame_count
+			elif frame_index < 0:
+				global_frame_index += effect_renderer.epfs[epf_idx].frame_count - 1
+				break
+			else:
+				global_frame_index += frame_index
+				break
+		if global_frame_index >= total_frames:
+			epf_index += 1
+			var epf_option_str: String = "efx%d.dat:EFFECT%d.epf" % [epf_index, epf_index]
+			epf_options.select(get_option_index(epf_options, epf_option_str))
+			current_epf_key = epf_option_str
+			load_frame(current_epf_key, true)
+		var effect_index: int = -1
+		for effect_idx in range(effect_renderer.efx.effect_count):
+			if effect_index >= 0:
+				break
+
+			var efx: NTK_Effect = effect_renderer.efx.effects[effect_idx]
+			for effect_frame in efx.effect_frames:
+				if effect_frame.frame_index == global_frame_index:
+					effect_index = effect_idx
+					break
+
+		type_index_spinbox.min_value = 0
+		type_index_spinbox.max_value = self.effect_renderer.efx.effect_count - 1
+		self.updating_epf_index = true
+		type_index_spinbox.value = effect_index
+		self.updating_epf_index = false
 		type_index_spinbox.visible = true
 	else:
 		type_index_label.visible = false
@@ -240,6 +304,8 @@ func _on_focus_changed(control: Control) -> void:
 		focused_spinbox = color_offset_spinbox
 	elif parent_control == pal_index_spinbox:
 		focused_spinbox = pal_index_spinbox
+	elif parent_control == type_index_spinbox:
+		focused_spinbox = type_index_spinbox
 	else:
 		focused_spinbox = null
 
@@ -345,8 +411,8 @@ func load_frame(epf_key: String, reset: bool=false) -> void:
 
 	if reset:
 		epf_index_spinbox.value = 0
-		epf_index_spinbox.max_value = epf_list[epf_key].frame_count
-		$UI/EpfIndexLabel.text = "Frame Index (0-" + str(int(epf_index_spinbox.max_value - 1)) + ")"
+	epf_index_spinbox.max_value = epf_list[epf_key].frame_count
+	$UI/EpfIndexLabel.text = "Frame Index (0-" + str(int(epf_index_spinbox.max_value - 1)) + ")"
 
 func clear_frame_container() -> void:
 	for child in frame_container.get_children():
@@ -490,8 +556,8 @@ func match_palette() -> void:
 
 func _on_epf_options(index):
 	match_palette()
-	_render(index)
-	update_type_spinbox()
+	_render()
+	update_type_spinbox(epf_index_spinbox.value)
 
 func _on_pal_index_spinbox_value_changed(spinbox_value):
 	# If the animate_palette_only_checkbox is pressed, the spinner should search for the next (or previous)
@@ -540,12 +606,36 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 		var epf_option_str: String = "mon%d.dat:mon%d.epf" % [epf_index, epf_index]
 		if current_epf_key != epf_option_str:
 			epf_options.select(get_option_index(epf_options, epf_option_str))
-		if self.update_from_type:
+			current_epf_key = epf_option_str
+			load_frame(current_epf_key)
+			epf_index_spinbox.max_value = epf_list[current_epf_key].frame_count
+			$UI/EpfIndexLabel.text = "Frame Index (0-" + str(int(epf_index_spinbox.max_value - 1)) + ")"
+		if self.update_from_type and not self.updating_epf_index:
 			epf_index_spinbox.value = frame_index
 		pal_index_spinbox.value = mob.palette_index
+	var efx_regex = RegEx.new()
+	efx_regex.compile("efx[0-9]*.dat:EFFECT([0-9])*.epf")
+	var efx_search := efx_regex.search(current_epf_key)
+	if efx_search:
+		var efx: NTK_Effect = effect_renderer.efx.effects[type_value]
+		var efx_frame_index = efx.effect_frames[0].frame_index
+		var indices: Indices = Indices.new(efx_frame_index, effect_renderer.epfs)
+		var epf_index: int = indices.epf_index
+		var frame_index: int = indices.frame_index
+		var epf_option_str: String = "efx%d.dat:EFFECT%d.epf" % [epf_index, epf_index]
+		if current_epf_key != epf_option_str:
+			epf_options.select(get_option_index(epf_options, epf_option_str))
+			current_epf_key = epf_option_str
+			load_frame(current_epf_key)
+			epf_index_spinbox.max_value = epf_list[current_epf_key].frame_count
+			$UI/EpfIndexLabel.text = "Frame Index (0-" + str(int(epf_index_spinbox.max_value - 1)) + ")"
+		if self.update_from_type and not self.updating_epf_index:
+			epf_index_spinbox.value = frame_index
+		pal_index_spinbox.value = efx.effect_frames[0].palette_index
 
-func _on_epf_index_spinbox_value_changed(index: int):
-	update_from_type = false
-	update_type_spinbox()
-	update_from_type = true
-	_render(index)
+func _on_epf_index_spinbox_value_changed(epf_index: int):
+	if not self.updating_epf_index:
+		update_from_type = false
+		update_type_spinbox(epf_index)
+		update_from_type = true
+	_render()
