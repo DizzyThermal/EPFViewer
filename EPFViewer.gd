@@ -4,10 +4,14 @@ const color_tile_size := 16
 const min_frame_size := 1
 const max_frame_size := 16
 
+const Indices = preload("res://DataTypes/Indices.gd")
 const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 
 @onready var epf_options: OptionButton = $UI/EpfOptions
 @onready var epf_index_spinbox: SpinBox = $UI/EpfIndexSpinbox
+
+@onready var type_index_label: Label = $UI/TypeIndexLabel
+@onready var type_index_spinbox: SpinBox = $UI/TypeIndexSpinbox
 
 @onready var frame_container: CenterContainer = $UI/FrameContainer
 
@@ -27,6 +31,12 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 @onready var pal_list := {}
 
 var offset_range: Array[int] = []
+
+# Renderers
+var renderer_threads: Array[Thread] = []
+
+var mob_renderer: NTK_MobRenderer
+var update_from_type: bool = true
 
 # Debug Values (Set on load)
 
@@ -94,6 +104,22 @@ func _ready() -> void:
 	populate_option_buttons()
 	get_viewport().connect("gui_focus_changed", _on_focus_changed)
 
+	# Create Renderers
+	renderer_threads.append(Thread.new())
+	renderer_threads[-1].start(func(): self.mob_renderer = NTK_MobRenderer.new())
+
+	# Wait for all renderer threads to finish
+	var all_finished := false
+	while not all_finished:
+		all_finished = true
+		for renderer_thread in renderer_threads:
+			if renderer_thread.is_alive():
+				all_finished = false
+				break
+	for thread in renderer_threads:
+		thread.wait_to_finish()
+	renderer_threads.clear()
+
 	if debug_epf_key and debug_pal_key:
 		epf_options.select(get_option_index(epf_options, debug_epf_key))
 		pal_options.select(get_option_index(pal_options, debug_pal_key))
@@ -107,6 +133,7 @@ func _ready() -> void:
 			color_offset_spinbox.value = debug_color_offset
 		_render(true)
 		current_scale = debug_start_scale
+		update_type_spinbox()
 
 func _process(delta) -> void:
 	if frame_sprite != null:
@@ -142,7 +169,7 @@ func _process(delta) -> void:
 		else:
 			animated_color_offset = animated_color_offset - 1
 		if palette_list and len(palette_list.palettes) > 0:
-			_render()
+			_render(false)
 		render_cooldown = 1.4 / animation_speed_slider.value
 
 	spinbox_change_cooldown -= delta
@@ -162,6 +189,47 @@ func _process(delta) -> void:
 				focused_spinbox.value -= 8
 			else:
 				focused_spinbox.value -= 1
+
+func update_type_spinbox() -> void:
+	var mon_regex = RegEx.new()
+	mon_regex.compile("mon[0-9]*.dat:mon([0-9])*.epf")
+	var mon_search := mon_regex.search(current_epf_key)
+	if mon_search:
+		type_index_label.text = "Monster Index (0-" + str(self.mob_renderer.dna.mob_count - 1) + "):"
+		type_index_label.visible = true
+		# Determine Mob Index from Frame Index
+		var epf_index: int = int(mon_search.strings[1])
+		var frame_index: int = int(epf_index_spinbox.value)
+		var global_frame_index: int = 0
+		for epf_idx in range(epf_index + 1):
+			if epf_idx < epf_index:
+				global_frame_index += mob_renderer.epfs[epf_idx].frame_count
+			else:
+				global_frame_index += frame_index
+		var mob_index: int = -1
+		for mob_idx in range(mob_renderer.dna.mob_count):
+			if mob_index >= 0:
+				break
+
+			var mob: Mob = mob_renderer.dna.get_mob(mob_idx)
+			var mob_frame_index = mob.frame_index
+			for animation in mob.animations:
+				if mob_index >= 0:
+					break
+
+				for animation_frame in animation.animation_frames:
+					var animation_frame_offset: int = mob_frame_index + animation_frame.frame_offset
+					if animation_frame_offset == global_frame_index:
+						mob_index = mob_idx
+						break
+
+		type_index_spinbox.min_value = 0
+		type_index_spinbox.max_value = self.mob_renderer.dna.mob_count - 1
+		type_index_spinbox.value = mob_index
+		type_index_spinbox.visible = true
+	else:
+		type_index_label.visible = false
+		type_index_spinbox.visible = false
 
 func _on_focus_changed(control: Control) -> void:
 	var parent_control := control.get_parent()
@@ -423,6 +491,7 @@ func match_palette() -> void:
 func _on_epf_options(index):
 	match_palette()
 	_render(index)
+	update_type_spinbox()
 
 func _on_pal_index_spinbox_value_changed(spinbox_value):
 	# If the animate_palette_only_checkbox is pressed, the spinner should search for the next (or previous)
@@ -449,7 +518,7 @@ func _on_pal_index_spinbox_value_changed(spinbox_value):
 			last_palette_spinbox_value = counter
 			break
 
-	_render()
+	_render(false)
 
 func get_unique_values(arr: Array) -> Array:
 	var unique_arr = []
@@ -457,3 +526,26 @@ func get_unique_values(arr: Array) -> Array:
 		if not unique_arr.has(element):
 			unique_arr.append(element)
 	return unique_arr
+
+func _on_type_index_spinbox_value_changed(type_value: int):
+	var mon_regex = RegEx.new()
+	mon_regex.compile("mon[0-9]*.dat:mon([0-9])*.epf")
+	var mon_search := mon_regex.search(current_epf_key)
+	if mon_search:
+		var mob: Mob = mob_renderer.dna.get_mob(type_value)
+		var mob_frame_index = mob.frame_index + mob.animations[3].animation_frames[0].frame_offset if len(mob.animations) > 3 else mob.frame_index
+		var indices: Indices = Indices.new(mob_frame_index, mob_renderer.epfs)
+		var epf_index: int = indices.epf_index
+		var frame_index: int = indices.frame_index
+		var epf_option_str: String = "mon%d.dat:mon%d.epf" % [epf_index, epf_index]
+		if current_epf_key != epf_option_str:
+			epf_options.select(get_option_index(epf_options, epf_option_str))
+		if self.update_from_type:
+			epf_index_spinbox.value = frame_index
+		pal_index_spinbox.value = mob.palette_index
+
+func _on_epf_index_spinbox_value_changed(index: int):
+	update_from_type = false
+	update_type_spinbox()
+	update_from_type = true
+	_render(index)

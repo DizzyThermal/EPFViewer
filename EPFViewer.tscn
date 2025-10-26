@@ -97,6 +97,22 @@ min_value = -1.0
 max_value = 0.0
 alignment = 1
 
+[node name="TypeIndexLabel" type="Label" parent="UI"]
+offset_left = 10.0
+offset_top = 273.0
+offset_right = 154.0
+offset_bottom = 296.0
+text = "Type Index (0-0):"
+
+[node name="TypeIndexSpinbox" type="SpinBox" parent="UI"]
+offset_left = 10.0
+offset_top = 297.0
+offset_right = 96.5625
+offset_bottom = 328.0
+min_value = -1.0
+max_value = 0.0
+alignment = 1
+
 [node name="ColorOffsetLabel" type="Label" parent="UI"]
 offset_left = 10.0
 offset_top = 166.0
@@ -266,7 +282,8 @@ horizontal_alignment = 1
 
 [connection signal="item_focused" from="UI/EpfOptions" to="." method="_on_epf_options"]
 [connection signal="item_selected" from="UI/EpfOptions" to="." method="_on_epf_options"]
-[connection signal="value_changed" from="UI/EpfIndexSpinbox" to="." method="_render"]
+[connection signal="value_changed" from="UI/EpfIndexSpinbox" to="." method="_on_epf_index_spinbox_value_changed"]
+[connection signal="value_changed" from="UI/TypeIndexSpinbox" to="." method="_on_type_index_spinbox_value_changed"]
 [connection signal="value_changed" from="UI/ColorOffsetSpinbox" to="." method="_render"]
 [connection signal="pressed" from="UI/ReverseCheckbox" to="." method="_on_animate_checkbox_pressed"]
 [connection signal="pressed" from="UI/AnimatedPalettesOnlyCheckbox" to="." method="_on_animate_checkbox_pressed"]
