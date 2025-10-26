@@ -36,6 +36,7 @@ var offset_range: Array[int] = []
 var renderer_threads: Array[Thread] = []
 
 var mob_renderer: NTK_MobRenderer
+var update_from_type: bool = true
 
 # Debug Values (Set on load)
 
@@ -200,17 +201,28 @@ func update_type_spinbox() -> void:
 		var epf_index: int = int(mon_search.strings[1])
 		var frame_index: int = int(epf_index_spinbox.value)
 		var global_frame_index: int = 0
-		for epf_idx in range(epf_index):
+		for epf_idx in range(epf_index + 1):
 			if epf_idx < epf_index:
 				global_frame_index += mob_renderer.epfs[epf_idx].frame_count
 			else:
 				global_frame_index += frame_index
-		var mob_index: int = 0
+		var mob_index: int = -1
 		for mob_idx in range(mob_renderer.dna.mob_count):
-			var mob_frame_index = mob_renderer.dna.get_mob(mob_idx).frame_index
-			if mob_frame_index > global_frame_index:
-				mob_index = mob_idx - 1
+			if mob_index >= 0:
 				break
+
+			var mob: Mob = mob_renderer.dna.get_mob(mob_idx)
+			var mob_frame_index = mob.frame_index
+			for animation in mob.animations:
+				if mob_index >= 0:
+					break
+
+				for animation_frame in animation.animation_frames:
+					var animation_frame_offset: int = mob_frame_index + animation_frame.frame_offset
+					if animation_frame_offset == global_frame_index:
+						mob_index = mob_idx
+						break
+
 		type_index_spinbox.min_value = 0
 		type_index_spinbox.max_value = self.mob_renderer.dna.mob_count - 1
 		type_index_spinbox.value = mob_index
@@ -520,11 +532,20 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 	mon_regex.compile("mon[0-9]*.dat:mon([0-9])*.epf")
 	var mon_search := mon_regex.search(current_epf_key)
 	if mon_search:
-		var mob_frame_index: int = mob_renderer.dna.get_mob(type_value).frame_index
+		var mob: Mob = mob_renderer.dna.get_mob(type_value)
+		var mob_frame_index = mob.frame_index + mob.animations[3].animation_frames[0].frame_offset if len(mob.animations) > 3 else mob.frame_index
 		var indices: Indices = Indices.new(mob_frame_index, mob_renderer.epfs)
 		var epf_index: int = indices.epf_index
 		var frame_index: int = indices.frame_index
 		var epf_option_str: String = "mon%d.dat:mon%d.epf" % [epf_index, epf_index]
 		if current_epf_key != epf_option_str:
 			epf_options.select(get_option_index(epf_options, epf_option_str))
-		epf_index_spinbox.value = frame_index
+		if self.update_from_type:
+			epf_index_spinbox.value = frame_index
+		pal_index_spinbox.value = mob.palette_index
+
+func _on_epf_index_spinbox_value_changed(index: int):
+	update_from_type = false
+	update_type_spinbox()
+	update_from_type = true
+	_render(index)
