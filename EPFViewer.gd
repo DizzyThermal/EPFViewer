@@ -597,6 +597,9 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 	var mon_regex = RegEx.new()
 	mon_regex.compile("mon[0-9]*.dat:mon([0-9])*.epf")
 	var mon_search := mon_regex.search(current_epf_key)
+	var efx_regex = RegEx.new()
+	efx_regex.compile("efx[0-9]*.dat:EFFECT([0-9])*.epf")
+	var efx_search := efx_regex.search(current_epf_key)
 	if mon_search:
 		var mob: Mob = mob_renderer.dna.get_mob(type_value)
 		var mob_frame_index = mob.frame_index + mob.animations[3].animation_frames[0].frame_offset if len(mob.animations) > 3 else mob.frame_index
@@ -608,15 +611,10 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 			epf_options.select(get_option_index(epf_options, epf_option_str))
 			current_epf_key = epf_option_str
 			load_frame(current_epf_key)
-			epf_index_spinbox.max_value = epf_list[current_epf_key].frame_count
-			$UI/EpfIndexLabel.text = "Frame Index (0-" + str(int(epf_index_spinbox.max_value - 1)) + ")"
 		if self.update_from_type and not self.updating_epf_index:
 			epf_index_spinbox.value = frame_index
 		pal_index_spinbox.value = mob.palette_index
-	var efx_regex = RegEx.new()
-	efx_regex.compile("efx[0-9]*.dat:EFFECT([0-9])*.epf")
-	var efx_search := efx_regex.search(current_epf_key)
-	if efx_search:
+	elif efx_search:
 		var efx: NTK_Effect = effect_renderer.efx.effects[type_value]
 		var efx_frame_index = efx.effect_frames[0].frame_index
 		var indices: Indices = Indices.new(efx_frame_index, effect_renderer.epfs)
@@ -627,8 +625,6 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 			epf_options.select(get_option_index(epf_options, epf_option_str))
 			current_epf_key = epf_option_str
 			load_frame(current_epf_key)
-			epf_index_spinbox.max_value = epf_list[current_epf_key].frame_count
-			$UI/EpfIndexLabel.text = "Frame Index (0-" + str(int(epf_index_spinbox.max_value - 1)) + ")"
 		if self.update_from_type and not self.updating_epf_index:
 			epf_index_spinbox.value = frame_index
 		pal_index_spinbox.value = efx.effect_frames[0].palette_index
