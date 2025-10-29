@@ -21,6 +21,7 @@ config/icon="res://icon.png"
 
 Database="*res://Resources/Database.gd"
 Resources="*res://Resources/Resources.gd"
+Renderers="*res://Resources/Renderers.gd"
 ViewerResources="*res://Resources/ViewerResources.gd"
 Debug="*res://Resources/Debug.gd"
 

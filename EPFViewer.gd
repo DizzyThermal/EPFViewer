@@ -32,13 +32,10 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 
 var offset_range: Array[int] = []
 
-# Renderers
-var renderer_threads: Array[Thread] = []
-
-var mob_renderer: NTK_MobRenderer
-var effect_renderer: NTK_EffectRenderer
 var update_from_type: bool = true
 var updating_epf_index: bool = false
+
+var initialized: bool = false
 
 # Debug Values (Set on load)
 
@@ -86,6 +83,8 @@ var dat_files: Array[String] = []
 var mutex: Mutex = Mutex.new()
 
 func _ready() -> void:
+	$UI.visible = false
+
 	var ntk_data_directory := DirAccess.open(Database.get_config_item_value("data_dir"))
 
 	# Load EPFs and PALs
@@ -106,40 +105,29 @@ func _ready() -> void:
 	populate_option_buttons()
 	get_viewport().connect("gui_focus_changed", _on_focus_changed)
 
-	# Create Renderers
-	renderer_threads.append(Thread.new())
-	renderer_threads[-1].start(func(): self.mob_renderer = NTK_MobRenderer.new())
-	renderer_threads.append(Thread.new())
-	renderer_threads[-1].start(func(): self.effect_renderer = NTK_EffectRenderer.new())
-
-	# Wait for all renderer threads to finish
-	var all_finished := false
-	while not all_finished:
-		all_finished = true
-		for renderer_thread in renderer_threads:
-			if renderer_thread.is_alive():
-				all_finished = false
-				break
-	for thread in renderer_threads:
-		thread.wait_to_finish()
-	renderer_threads.clear()
-
-	if debug_epf_key and debug_pal_key:
-		epf_options.select(get_option_index(epf_options, debug_epf_key))
-		pal_options.select(get_option_index(pal_options, debug_pal_key))
-		load_pal(debug_pal_key, current_pal_key != debug_pal_key)
-		current_pal_key = debug_pal_key
-		load_frame(debug_epf_key, current_epf_key != debug_epf_key)
-		current_epf_key = debug_epf_key
-		epf_index_spinbox.value = debug_epf_index
-		pal_index_spinbox.value = debug_pal_index
-		if debug_color_offset:
-			color_offset_spinbox.value = debug_color_offset
-		_render(true)
-		current_scale = debug_start_scale
-		update_type_spinbox(epf_index_spinbox.value)
-
 func _process(delta) -> void:
+	if not initialized:
+		if not Renderers or not Renderers.stage2_complete:
+			return
+
+		if debug_epf_key and debug_pal_key:
+			epf_options.select(get_option_index(epf_options, debug_epf_key))
+			pal_options.select(get_option_index(pal_options, debug_pal_key))
+			load_pal(debug_pal_key, current_pal_key != debug_pal_key)
+			current_pal_key = debug_pal_key
+			load_frame(debug_epf_key, current_epf_key != debug_epf_key)
+			current_epf_key = debug_epf_key
+			epf_index_spinbox.value = debug_epf_index
+			pal_index_spinbox.value = debug_pal_index
+			if debug_color_offset:
+				color_offset_spinbox.value = debug_color_offset
+			_render(true)
+			current_scale = debug_start_scale
+			update_type_spinbox(epf_index_spinbox.value)
+		
+		$UI.visible = true
+		initialized = true
+
 	if frame_sprite != null:
 		if Input.is_action_just_pressed("zoom-in") and \
 				frame_sprite.scale.x < max_frame_size and \
@@ -197,11 +185,14 @@ func _process(delta) -> void:
 func update_type_spinbox(_frame_index: int) -> void:
 	var frame_index: int = epf_index_spinbox.value
 	var mon_regex = RegEx.new()
-	mon_regex.compile("mon\\d+.dat:mon(\\d+)*.epf")
+	mon_regex.compile("mon\\d+.dat:mon(\\d+).epf")
 	var mon_search := mon_regex.search(current_epf_key)
 	var efx_regex = RegEx.new()
-	efx_regex.compile("efx\\d+.dat:EFFECT(\\d+)*.epf")
+	efx_regex.compile("efx\\d+.dat:EFFECT(\\d+).epf")
 	var efx_search := efx_regex.search(current_epf_key)
+	var body_regex = RegEx.new()
+	body_regex.compile("body\\d+.dat:Body(\\d+).epf")
+	var body_search := body_regex.search(current_epf_key)
 	var search_match: RegExMatch
 	var renderer: NTK_Renderer
 	var type_epf_str: String
@@ -209,19 +200,26 @@ func update_type_spinbox(_frame_index: int) -> void:
 	var type_count: int
 	if mon_search:
 		search_match = mon_search
-		renderer = mob_renderer
+		renderer = Renderers.mob_renderer
 		type_epf_str = "mon%d.dat:mon%d.epf"
 		type_name = "Monster"
-		type_count = self.mob_renderer.dna.mob_count
+		type_count = Renderers.mob_renderer.dna.mob_count
 	elif efx_search:
 		search_match = efx_search
-		renderer = effect_renderer
+		renderer = Renderers.effect_renderer
 		type_epf_str = "efx%d.dat:EFFECT%d.epf"
 		type_name = "Effect"
-		type_count = self.effect_renderer.efx.effect_count
+		type_count = Renderers.effect_renderer.efx.effect_count
+	elif body_search:
+		search_match = body_search
+		renderer = Renderers.character_renderer.body_renderer
+		type_epf_str = "body%d.dat:Body%d.epf"
+		type_name = "Body"
+		type_count = Renderers.character_renderer.body_renderer.dsc.part_count
 	else:
 		type_index_label.visible = false
 		type_index_spinbox.visible = false
+		return
 
 	type_index_label.text = type_name + " Index (0-" + str(type_count - 1) + "):"
 	type_index_label.visible = true
@@ -252,11 +250,11 @@ func update_type_spinbox(_frame_index: int) -> void:
 
 	var type_index: int = -1
 	if mon_search:
-		for mob_idx in range(mob_renderer.dna.mob_count):
+		for mob_idx in range(type_count):
 			if type_index >= 0:
 				break
 
-			var mob: Mob = mob_renderer.dna.get_mob(mob_idx)
+			var mob: Mob = Renderers.mob_renderer.dna.get_mob(mob_idx)
 			var mob_frame_index = mob.frame_index
 			for animation in mob.animations:
 				if type_index >= 0:
@@ -268,15 +266,32 @@ func update_type_spinbox(_frame_index: int) -> void:
 						type_index = mob_idx
 						break
 	elif efx_search:
-		for effect_idx in range(effect_renderer.efx.effect_count):
+		for effect_idx in range(type_count):
 			if type_index >= 0:
 				break
 
-			var efx: NTK_Effect = effect_renderer.efx.effects[effect_idx]
+			var efx: NTK_Effect = Renderers.effect_renderer.efx.effects[effect_idx]
 			for effect_frame in efx.effect_frames:
 				if effect_frame.frame_index == global_frame_index:
 					type_index = effect_idx
 					break
+	elif body_search:
+		for part_idx in range(type_count):
+			if type_index >= 0:
+				break
+			
+			var part: Part = Renderers.character_renderer.body_renderer.dsc.parts[part_idx]
+			var part_frame_index: int = part.frame_index
+			for animation_key in part.animations.keys():
+				var animation: PartAnimation = part.animations[animation_key]
+				if type_index >= 0:
+					break
+				
+				for animation_frame in animation.animation_frames:
+					var animation_frame_offset: int = part_frame_index + animation_frame.frame_offset
+					if animation_frame_offset == global_frame_index:
+						type_index = part_idx
+						break
 
 	type_index_spinbox.min_value = 0
 	type_index_spinbox.max_value = type_count - 1
@@ -585,30 +600,41 @@ func get_unique_values(arr: Array) -> Array:
 
 func _on_type_index_spinbox_value_changed(type_value: int):
 	var mon_regex = RegEx.new()
-	mon_regex.compile("mon\\d+.dat:mon(\\d+)*.epf")
+	mon_regex.compile("mon\\d+.dat:mon(\\d+).epf")
 	var mon_search := mon_regex.search(current_epf_key)
 	var efx_regex = RegEx.new()
-	efx_regex.compile("efx\\d+*.dat:EFFECT(\\d+)*.epf")
+	efx_regex.compile("efx\\d+.dat:EFFECT(\\d+).epf")
 	var efx_search := efx_regex.search(current_epf_key)
+	var body_regex = RegEx.new()
+	body_regex.compile("body\\d+.dat:Body(\\d+).epf")
+	var body_search := body_regex.search(current_epf_key)
 	var epf_option_str: String
 	var frame_index: int = -1
 	var palette_index: int = 0
 	if mon_search:
-		var mob: Mob = mob_renderer.dna.get_mob(type_value)
-		var mob_frame_index = mob.frame_index + mob.animations[3].animation_frames[0].frame_offset if len(mob.animations) > 3 else mob.frame_index
-		var indices: Indices = Indices.new(mob_frame_index, mob_renderer.epfs)
+		var mob: Mob = Renderers.mob_renderer.dna.get_mob(type_value)
+		var mob_frame_index = mob.frame_index + mob.animations[3].animation_frames[0].frame_offset if len(mob.animations) > 3 else 0
+		var indices: Indices = Indices.new(mob_frame_index, Renderers.mob_renderer.epfs)
 		var epf_index: int = indices.epf_index
 		frame_index = indices.frame_index
 		epf_option_str = "mon%d.dat:mon%d.epf" % [epf_index, epf_index]
 		palette_index = mob.palette_index
 	elif efx_search:
-		var efx: NTK_Effect = effect_renderer.efx.effects[type_value]
+		var efx: NTK_Effect = Renderers.effect_renderer.efx.effects[type_value]
 		var efx_frame_index = efx.effect_frames[0].frame_index
-		var indices: Indices = Indices.new(efx_frame_index, effect_renderer.epfs)
+		var indices: Indices = Indices.new(efx_frame_index, Renderers.effect_renderer.epfs)
 		var epf_index: int = indices.epf_index
 		frame_index = indices.frame_index
 		epf_option_str = "efx%d.dat:EFFECT%d.epf" % [epf_index, epf_index]
 		palette_index = efx.effect_frames[0].palette_index
+	elif body_search:
+		var part: Part = Renderers.character_renderer.body_renderer.dsc.parts[type_value]
+		var part_frame_index = part.frame_index + part.animations[2].animation_frames[0].frame_offset if 2 in part.animations else 0
+		var indices: Indices = Indices.new(part_frame_index, Renderers.character_renderer.body_renderer.epfs)
+		var epf_index: int = indices.epf_index
+		frame_index = indices.frame_index
+		epf_option_str = "body%d.dat:Body%d.epf" % [epf_index, epf_index]
+		palette_index = part.palette_index
 	
 	if current_epf_key != epf_option_str:
 		epf_options.select(get_option_index(epf_options, epf_option_str))
