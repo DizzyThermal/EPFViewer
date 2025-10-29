@@ -197,10 +197,10 @@ func _process(delta) -> void:
 func update_type_spinbox(_frame_index: int) -> void:
 	var frame_index: int = epf_index_spinbox.value
 	var mon_regex = RegEx.new()
-	mon_regex.compile("mon[0-9]*.dat:mon([0-9])*.epf")
+	mon_regex.compile("mon\\d+.dat:mon(\\d+)*.epf")
 	var mon_search := mon_regex.search(current_epf_key)
 	var efx_regex = RegEx.new()
-	efx_regex.compile("efx[0-9]*.dat:EFFECT([0-9])*.epf")
+	efx_regex.compile("efx\\d+.dat:EFFECT(\\d+)*.epf")
 	var efx_search := efx_regex.search(current_epf_key)
 	var search_match: RegExMatch
 	var renderer: NTK_Renderer
@@ -585,10 +585,10 @@ func get_unique_values(arr: Array) -> Array:
 
 func _on_type_index_spinbox_value_changed(type_value: int):
 	var mon_regex = RegEx.new()
-	mon_regex.compile("mon[0-9]*.dat:mon([0-9])*.epf")
+	mon_regex.compile("mon\\d+.dat:mon(\\d+)*.epf")
 	var mon_search := mon_regex.search(current_epf_key)
 	var efx_regex = RegEx.new()
-	efx_regex.compile("efx[0-9]*.dat:EFFECT([0-9])*.epf")
+	efx_regex.compile("efx\\d+*.dat:EFFECT(\\d+)*.epf")
 	var efx_search := efx_regex.search(current_epf_key)
 	var epf_option_str: String
 	var frame_index: int = -1
