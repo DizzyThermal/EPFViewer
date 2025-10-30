@@ -32,6 +32,7 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 
 var offset_range: Array[int] = []
 
+var last_type: String
 var update_from_type: bool = true
 var updating_epf_index: bool = false
 
@@ -111,6 +112,7 @@ func _process(delta) -> void:
 			return
 
 		if debug_epf_key and debug_pal_key:
+			self.last_type = "Monster"
 			epf_options.select(get_option_index(epf_options, debug_epf_key))
 			pal_options.select(get_option_index(pal_options, debug_pal_key))
 			load_pal(debug_pal_key, current_pal_key != debug_pal_key)
@@ -238,6 +240,9 @@ func update_type_spinbox() -> void:
 		type_index_label.visible = false
 		type_index_spinbox.visible = false
 		return
+	if self.last_type != type_name:
+		epf_index_spinbox.value = 0
+		self.last_type = type_name
 
 	type_index_label.text = type_name + " Index (0-" + str(type_count - 1) + "):"
 	type_index_label.visible = true
@@ -319,12 +324,12 @@ func update_type_spinbox() -> void:
 						type_index = part_idx
 						break
 
-	type_index_spinbox.min_value = 0
-	type_index_spinbox.max_value = type_count - 1
 	self.updating_epf_index = true
+	type_index_spinbox.min_value = 0
 	type_index_spinbox.value = type_index
-	self.updating_epf_index = false
+	type_index_spinbox.max_value = type_count - 1
 	type_index_spinbox.visible = true
+	self.updating_epf_index = false
 
 func _on_focus_changed(control: Control) -> void:
 	var parent_control := control.get_parent()
@@ -436,7 +441,7 @@ func clear_grid() -> void:
 
 func load_frame(epf_key: String, reset: bool=false) -> void:
 	current_epf_key = epf_key
-	if not epf_list[epf_key]:
+	if epf_key in epf_list and not epf_list[epf_key]:
 		var dat := DatFileHandler.new(epf_key.split(":")[0])
 		epf_list[epf_key] = EpfFileHandler.new(dat.get_file(epf_key.split(":")[1]))
 
@@ -643,6 +648,7 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 	var epf_option_str: String = current_epf_key
 	var frame_index: int = -1
 	var palette_index: int = 0
+	var type_name: String
 	
 	var part_renderer: NTK_PartRenderer
 	var part_epf_option_str: String
@@ -654,6 +660,7 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 		frame_index = indices.frame_index
 		epf_option_str = "mon%d.dat:mon%d.epf" % [epf_index, epf_index]
 		palette_index = mob.palette_index
+		type_name = "Monster"
 	elif efx_search:
 		var efx: NTK_Effect = Renderers.effect_renderer.efx.effects[type_value]
 		var efx_frame_index = efx.effect_frames[0].frame_index
@@ -662,15 +669,23 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 		frame_index = indices.frame_index
 		epf_option_str = "efx%d.dat:EFFECT%d.epf" % [epf_index, epf_index]
 		palette_index = efx.effect_frames[0].palette_index
+		type_name = "Effect"
 	elif body_search:
 		part_renderer = Renderers.character_renderer.body_renderer
 		part_epf_option_str = "body%d.dat:Body%d.epf"
+		type_name = "Body"
 	elif face_search:
 		part_renderer = Renderers.character_renderer.face_renderer
 		part_epf_option_str = "face%d.dat:Face%d.epf"
+		type_name = "Face"
 	elif hair_search:
 		part_renderer = Renderers.character_renderer.hair_renderer
 		part_epf_option_str = "hair%d.dat:Hair%d.epf"
+		type_name = "Hair"
+	
+	if self.last_type != type_name:
+		type_value = 0
+		self.last_type = type_name
 	
 	if part_renderer != null:
 		var part: Part = part_renderer.dsc.parts[type_value]
