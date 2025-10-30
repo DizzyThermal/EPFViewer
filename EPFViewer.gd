@@ -123,7 +123,7 @@ func _process(delta) -> void:
 				color_offset_spinbox.value = debug_color_offset
 			_render(true)
 			current_scale = debug_start_scale
-			update_type_spinbox(epf_index_spinbox.value)
+			update_type_spinbox()
 		
 		$UI.visible = true
 		initialized = true
@@ -182,7 +182,7 @@ func _process(delta) -> void:
 			else:
 				focused_spinbox.value -= 1
 
-func update_type_spinbox(_frame_index: int) -> void:
+func update_type_spinbox() -> void:
 	var frame_index: int = epf_index_spinbox.value
 	var mon_regex = RegEx.new()
 	mon_regex.compile("mon\\d+.dat:mon(\\d+).epf")
@@ -193,6 +193,12 @@ func update_type_spinbox(_frame_index: int) -> void:
 	var body_regex = RegEx.new()
 	body_regex.compile("body\\d+.dat:Body(\\d+).epf")
 	var body_search := body_regex.search(current_epf_key)
+	var face_regex = RegEx.new()
+	face_regex.compile("face\\d+.dat:Face(\\d+).epf")
+	var face_search := face_regex.search(current_epf_key)
+	var hair_regex = RegEx.new()
+	hair_regex.compile("hair\\d+.dat:Hair(\\d+).epf")
+	var hair_search := hair_regex.search(current_epf_key)
 	var search_match: RegExMatch
 	var renderer: NTK_Renderer
 	var type_epf_str: String
@@ -216,6 +222,18 @@ func update_type_spinbox(_frame_index: int) -> void:
 		type_epf_str = "body%d.dat:Body%d.epf"
 		type_name = "Body"
 		type_count = Renderers.character_renderer.body_renderer.dsc.part_count
+	elif face_search:
+		search_match = face_search
+		renderer = Renderers.character_renderer.face_renderer
+		type_epf_str = "face%d.dat:Face%d.epf"
+		type_name = "Face"
+		type_count = Renderers.character_renderer.face_renderer.dsc.part_count
+	elif hair_search:
+		search_match = hair_search
+		renderer = Renderers.character_renderer.hair_renderer
+		type_epf_str = "hair%d.dat:Hair%d.epf"
+		type_name = "Hair"
+		type_count = Renderers.character_renderer.hair_renderer.dsc.part_count
 	else:
 		type_index_label.visible = false
 		type_index_spinbox.visible = false
@@ -249,6 +267,7 @@ func update_type_spinbox(_frame_index: int) -> void:
 		self.updating_epf_index = prev_val
 
 	var type_index: int = -1
+	var is_part: bool = false
 	if mon_search:
 		for mob_idx in range(type_count):
 			if type_index >= 0:
@@ -276,11 +295,18 @@ func update_type_spinbox(_frame_index: int) -> void:
 					type_index = effect_idx
 					break
 	elif body_search:
+		is_part = true
+	elif face_search:
+		is_part = true
+	elif hair_search:
+		is_part = true
+	
+	if is_part:
 		for part_idx in range(type_count):
 			if type_index >= 0:
 				break
 			
-			var part: Part = Renderers.character_renderer.body_renderer.dsc.parts[part_idx]
+			var part: Part = renderer.dsc.parts[part_idx]
 			var part_frame_index: int = part.frame_index
 			for animation_key in part.animations.keys():
 				var animation: PartAnimation = part.animations[animation_key]
@@ -562,7 +588,7 @@ func match_palette() -> void:
 func _on_epf_options(index):
 	match_palette()
 	_render()
-	update_type_spinbox(epf_index_spinbox.value)
+	update_type_spinbox()
 
 func _on_pal_index_spinbox_value_changed(spinbox_value):
 	# If the animate_palette_only_checkbox is pressed, the spinner should search for the next (or previous)
@@ -608,9 +634,18 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 	var body_regex = RegEx.new()
 	body_regex.compile("body\\d+.dat:Body(\\d+).epf")
 	var body_search := body_regex.search(current_epf_key)
-	var epf_option_str: String
+	var face_regex = RegEx.new()
+	face_regex.compile("face\\d+.dat:Face(\\d+).epf")
+	var face_search := face_regex.search(current_epf_key)
+	var hair_regex = RegEx.new()
+	hair_regex.compile("hair\\d+.dat:Hair(\\d+).epf")
+	var hair_search := hair_regex.search(current_epf_key)
+	var epf_option_str: String = current_epf_key
 	var frame_index: int = -1
 	var palette_index: int = 0
+	
+	var part_renderer: NTK_PartRenderer
+	var part_epf_option_str: String
 	if mon_search:
 		var mob: Mob = Renderers.mob_renderer.dna.get_mob(type_value)
 		var mob_frame_index = mob.frame_index + mob.animations[3].animation_frames[0].frame_offset if len(mob.animations) > 3 else 0
@@ -628,12 +663,22 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 		epf_option_str = "efx%d.dat:EFFECT%d.epf" % [epf_index, epf_index]
 		palette_index = efx.effect_frames[0].palette_index
 	elif body_search:
-		var part: Part = Renderers.character_renderer.body_renderer.dsc.parts[type_value]
+		part_renderer = Renderers.character_renderer.body_renderer
+		part_epf_option_str = "body%d.dat:Body%d.epf"
+	elif face_search:
+		part_renderer = Renderers.character_renderer.face_renderer
+		part_epf_option_str = "face%d.dat:Face%d.epf"
+	elif hair_search:
+		part_renderer = Renderers.character_renderer.hair_renderer
+		part_epf_option_str = "hair%d.dat:Hair%d.epf"
+	
+	if part_renderer != null:
+		var part: Part = part_renderer.dsc.parts[type_value]
 		var part_frame_index = part.frame_index + part.animations[2].animation_frames[0].frame_offset if 2 in part.animations else 0
 		var indices: Indices = Indices.new(part_frame_index, Renderers.character_renderer.body_renderer.epfs)
 		var epf_index: int = indices.epf_index
 		frame_index = indices.frame_index
-		epf_option_str = "body%d.dat:Body%d.epf" % [epf_index, epf_index]
+		epf_option_str = part_epf_option_str % [epf_index, epf_index]
 		palette_index = part.palette_index
 	
 	if current_epf_key != epf_option_str:
@@ -652,6 +697,6 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 func _on_epf_index_spinbox_value_changed(epf_index: int):
 	if not self.updating_epf_index:
 		update_from_type = false
-		update_type_spinbox(epf_index)
+		update_type_spinbox()
 		update_from_type = true
 	_render()
