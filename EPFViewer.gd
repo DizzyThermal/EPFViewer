@@ -573,12 +573,14 @@ func _render(force_grid_render: bool=false) -> void:
 
 func get_option_index(
 		option_button: OptionButton,
-		option_string: String) -> int:
+		option_string: String,
+		exact_match: bool=false) -> int:
 	var option_index := -1
 
 	for i in range(option_button.item_count):
 		var option_text := option_button.get_item_text(i)
-		if option_text == option_string:
+		if option_text == option_string or \
+				not exact_match and option_text.to_lower() == option_string.to_lower():
 			option_index = i
 			break
 	
@@ -682,10 +684,10 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 		part_renderer = Renderers.character_renderer.hair_renderer
 		part_epf_option_str = "hair%d.dat:Hair%d.epf"
 		type_name = "Hair"
-	
-	if self.last_type != type_name:
-		type_value = 0
-		self.last_type = type_name
+	#
+	#if self.last_type != type_name:
+		#type_value = 0
+		#self.last_type = type_name
 	
 	if part_renderer != null:
 		var part: Part = part_renderer.dsc.parts[type_value]
