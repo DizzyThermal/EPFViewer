@@ -32,21 +32,22 @@ const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 
 var offset_range: Array[int] = []
 
-var last_type: String
 var update_from_type: bool = true
 var updating_epf_index: bool = false
 
 var initialized: bool = false
 
+var last_type: String = "Hair"
+
 # Debug Values (Set on load)
 
-## Bandit
-var debug_epf_key := "mon7.dat:mon7.epf"
-var debug_pal_key := "mon.dat:monster.pal"
-var debug_epf_index := 178
+## ( Update `last_type` above to match "type")
+var debug_epf_key := "hair0.dat:Hair0.epf"
+var debug_pal_key := "char.dat:Hair.pal"
+var debug_epf_index := 2650
 var debug_pal_index := 0
 var debug_color_offset := 0
-var debug_start_scale := Vector2(4, 4)
+var debug_start_scale := Vector2(6, 6)
 
 ## Flameblade
 #var debug_epf_key := "sword0.dat:Sword0.epf"
@@ -55,14 +56,6 @@ var debug_start_scale := Vector2(4, 4)
 #var debug_pal_index := 0
 #var debug_color_offset := 0
 #var debug_start_scale := Vector2(8, 8)
-
-## Ox Boss
-#var debug_epf_key := "mon4.dat:mon4.epf"
-#var debug_pal_key := "mon.dat:monster.pal"
-#var debug_epf_index := 208
-#var debug_pal_index := 0
-#var debug_color_offset := 160
-#var debug_start_scale := Vector2(4, 4)
 
 var current_epf_key := ""
 var current_pal_key := ""
@@ -112,7 +105,6 @@ func _process(delta) -> void:
 			return
 
 		if debug_epf_key and debug_pal_key:
-			self.last_type = "Monster"
 			epf_options.select(get_option_index(epf_options, debug_epf_key))
 			pal_options.select(get_option_index(pal_options, debug_pal_key))
 			load_pal(debug_pal_key, current_pal_key != debug_pal_key)
@@ -192,15 +184,45 @@ func update_type_spinbox() -> void:
 	var efx_regex = RegEx.new()
 	efx_regex.compile("efx\\d+.dat:EFFECT(\\d+).epf")
 	var efx_search := efx_regex.search(current_epf_key)
+	var arrow_regex = RegEx.new()
+	arrow_regex.compile("arrow\\d+.dat:Arrow(\\d+).epf")
+	var arrow_search := arrow_regex.search(current_epf_key)
 	var body_regex = RegEx.new()
 	body_regex.compile("body\\d+.dat:Body(\\d+).epf")
 	var body_search := body_regex.search(current_epf_key)
+	var bow_regex = RegEx.new()
+	bow_regex.compile("bow\\d+.dat:Bow(\\d+).epf")
+	var bow_search := bow_regex.search(current_epf_key)
+	var coat_regex = RegEx.new()
+	coat_regex.compile("[Cc]oat\\d+.dat:Coat(\\d+).epf")
+	var coat_search := coat_regex.search(current_epf_key)
 	var face_regex = RegEx.new()
 	face_regex.compile("face\\d+.dat:Face(\\d+).epf")
 	var face_search := face_regex.search(current_epf_key)
+	var face_dec_regex = RegEx.new()
+	face_dec_regex.compile("FaceDec\\d+.dat:FaceDec(\\d+).epf")
+	var face_dec_search := face_dec_regex.search(current_epf_key)
 	var hair_regex = RegEx.new()
 	hair_regex.compile("hair\\d+.dat:Hair(\\d+).epf")
 	var hair_search := hair_regex.search(current_epf_key)
+	var hair_dec_regex = RegEx.new()
+	hair_dec_regex.compile("HairDec\\d+.dat:HairDec(\\d+).epf")
+	var hair_dec_search := hair_dec_regex.search(current_epf_key)
+	var helmet_regex = RegEx.new()
+	helmet_regex.compile("helmet\\d+.dat:Helmet(\\d+).epf")
+	var helmet_search := helmet_regex.search(current_epf_key)
+	var mantle_regex = RegEx.new()
+	mantle_regex.compile("mantle\\d+.dat:Mantle(\\d+).epf")
+	var mantle_search := mantle_regex.search(current_epf_key)
+	var shield_regex = RegEx.new()
+	shield_regex.compile("shield\\d+.dat:Shield(\\d+).epf")
+	var shield_search := shield_regex.search(current_epf_key)
+	var spear_regex = RegEx.new()
+	spear_regex.compile("spear\\d+.dat:Spear(\\d+).epf")
+	var spear_search := spear_regex.search(current_epf_key)
+	var sword_regex = RegEx.new()
+	sword_regex.compile("sword\\d+.dat:Sword(\\d+).epf")
+	var sword_search := sword_regex.search(current_epf_key)
 	var search_match: RegExMatch
 	var renderer: NTK_Renderer
 	var type_epf_str: String
@@ -218,24 +240,84 @@ func update_type_spinbox() -> void:
 		type_epf_str = "efx%d.dat:EFFECT%d.epf"
 		type_name = "Effect"
 		type_count = Renderers.effect_renderer.efx.effect_count
+	elif arrow_search:
+		search_match = arrow_search
+		renderer = Renderers.character_renderer.arrow_renderer
+		type_epf_str = "arrow%d.dat:Arrow%d.epf"
+		type_name = "Arrow"
+		type_count = renderer.dsc.part_count
 	elif body_search:
 		search_match = body_search
 		renderer = Renderers.character_renderer.body_renderer
 		type_epf_str = "body%d.dat:Body%d.epf"
 		type_name = "Body"
-		type_count = Renderers.character_renderer.body_renderer.dsc.part_count
+		type_count = renderer.dsc.part_count
+	elif bow_search:
+		search_match = bow_search
+		renderer = Renderers.character_renderer.bow_renderer
+		type_epf_str = "bow%d.dat:Bow%d.epf"
+		type_name = "Bow"
+		type_count = renderer.dsc.part_count
+	elif coat_search:
+		search_match = coat_search
+		renderer = Renderers.character_renderer.coat_renderer
+		type_epf_str = "coat%d.dat:Coat%d.epf"
+		type_name = "Coat"
+		type_count = renderer.dsc.part_count
 	elif face_search:
 		search_match = face_search
 		renderer = Renderers.character_renderer.face_renderer
 		type_epf_str = "face%d.dat:Face%d.epf"
 		type_name = "Face"
-		type_count = Renderers.character_renderer.face_renderer.dsc.part_count
+		type_count = renderer.dsc.part_count
+	elif face_dec_search:
+		search_match = face_dec_search
+		renderer = Renderers.character_renderer.face_dec_renderer
+		type_epf_str = "FaceDec%d.dat:FaceDec%d.epf"
+		type_name = "FaceDec"
+		type_count = renderer.dsc.part_count
 	elif hair_search:
 		search_match = hair_search
 		renderer = Renderers.character_renderer.hair_renderer
 		type_epf_str = "hair%d.dat:Hair%d.epf"
 		type_name = "Hair"
-		type_count = Renderers.character_renderer.hair_renderer.dsc.part_count
+		type_count = renderer.dsc.part_count
+	elif hair_dec_search:
+		search_match = hair_dec_search
+		renderer = Renderers.character_renderer.hair_dec_renderer
+		type_epf_str = "HairDec%d.dat:HairDec%d.epf"
+		type_name = "HairDec"
+		type_count = renderer.dsc.part_count
+	elif helmet_search:
+		search_match = helmet_search
+		renderer = Renderers.character_renderer.helmet_renderer
+		type_epf_str = "helmet%d.dat:Helmet%d.epf"
+		type_name = "Helmet"
+		type_count = renderer.dsc.part_count
+	elif mantle_search:
+		search_match = mantle_search
+		renderer = Renderers.character_renderer.mantle_renderer
+		type_epf_str = "mantle%d.dat:Mantle%d.epf"
+		type_name = "Mantle"
+		type_count = renderer.dsc.part_count
+	elif shield_search:
+		search_match = shield_search
+		renderer = Renderers.character_renderer.shield_renderer
+		type_epf_str = "shield%d.dat:Shield%d.epf"
+		type_name = "Shield"
+		type_count = renderer.dsc.part_count
+	elif spear_search:
+		search_match = spear_search
+		renderer = Renderers.character_renderer.spear_renderer
+		type_epf_str = "spear%d.dat:Spear%d.epf"
+		type_name = "Spear"
+		type_count = renderer.dsc.part_count
+	elif sword_search:
+		search_match = sword_search
+		renderer = Renderers.character_renderer.sword_renderer
+		type_epf_str = "sword%d.dat:Sword%d.epf"
+		type_name = "Sword"
+		type_count = renderer.dsc.part_count
 	else:
 		type_index_label.visible = false
 		type_index_spinbox.visible = false
@@ -272,7 +354,6 @@ func update_type_spinbox() -> void:
 		self.updating_epf_index = prev_val
 
 	var type_index: int = -1
-	var is_part: bool = false
 	if mon_search:
 		for mob_idx in range(type_count):
 			if type_index >= 0:
@@ -299,14 +380,19 @@ func update_type_spinbox() -> void:
 				if effect_frame.frame_index == global_frame_index:
 					type_index = effect_idx
 					break
-	elif body_search:
-		is_part = true
-	elif face_search:
-		is_part = true
-	elif hair_search:
-		is_part = true
-	
-	if is_part:
+	elif arrow_search or \
+			body_search or \
+			bow_search or \
+			coat_search or \
+			face_search or \
+			face_dec_search or \
+			hair_search or \
+			hair_dec_search or \
+			helmet_search or \
+			mantle_search or \
+			shield_search or \
+			spear_search or \
+			sword_search:
 		for part_idx in range(type_count):
 			if type_index >= 0:
 				break
@@ -638,19 +724,48 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 	var efx_regex = RegEx.new()
 	efx_regex.compile("efx\\d+.dat:EFFECT(\\d+).epf")
 	var efx_search := efx_regex.search(current_epf_key)
+	var arrow_regex = RegEx.new()
+	arrow_regex.compile("arrow\\d+.dat:Arrow(\\d+).epf")
+	var arrow_search := arrow_regex.search(current_epf_key)
 	var body_regex = RegEx.new()
 	body_regex.compile("body\\d+.dat:Body(\\d+).epf")
 	var body_search := body_regex.search(current_epf_key)
+	var bow_regex = RegEx.new()
+	bow_regex.compile("bow\\d+.dat:Bow(\\d+).epf")
+	var bow_search := bow_regex.search(current_epf_key)
+	var coat_regex = RegEx.new()
+	coat_regex.compile("[Cc]oat\\d+.dat:Coat(\\d+).epf")
+	var coat_search := coat_regex.search(current_epf_key)
 	var face_regex = RegEx.new()
 	face_regex.compile("face\\d+.dat:Face(\\d+).epf")
 	var face_search := face_regex.search(current_epf_key)
+	var face_dec_regex = RegEx.new()
+	face_dec_regex.compile("FaceDec\\d+.dat:FaceDec(\\d+).epf")
+	var face_dec_search := face_dec_regex.search(current_epf_key)
 	var hair_regex = RegEx.new()
 	hair_regex.compile("hair\\d+.dat:Hair(\\d+).epf")
 	var hair_search := hair_regex.search(current_epf_key)
+	var hair_dec_regex = RegEx.new()
+	hair_dec_regex.compile("HairDec\\d+.dat:HairDec(\\d+).epf")
+	var hair_dec_search := hair_dec_regex.search(current_epf_key)
+	var helmet_regex = RegEx.new()
+	helmet_regex.compile("helmet\\d+.dat:Helmet(\\d+).epf")
+	var helmet_search := helmet_regex.search(current_epf_key)
+	var mantle_regex = RegEx.new()
+	mantle_regex.compile("mantle\\d+.dat:Mantle(\\d+).epf")
+	var mantle_search := mantle_regex.search(current_epf_key)
+	var shield_regex = RegEx.new()
+	shield_regex.compile("shield\\d+.dat:Shield(\\d+).epf")
+	var shield_search := shield_regex.search(current_epf_key)
+	var spear_regex = RegEx.new()
+	spear_regex.compile("spear\\d+.dat:Spear(\\d+).epf")
+	var spear_search := spear_regex.search(current_epf_key)
+	var sword_regex = RegEx.new()
+	sword_regex.compile("sword\\d+.dat:Sword(\\d+).epf")
+	var sword_search := sword_regex.search(current_epf_key)
 	var epf_option_str: String = current_epf_key
 	var frame_index: int = -1
 	var palette_index: int = 0
-	var type_name: String
 	
 	var part_renderer: NTK_PartRenderer
 	var part_epf_option_str: String
@@ -662,37 +777,58 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 		frame_index = indices.frame_index
 		epf_option_str = "mon%d.dat:mon%d.epf" % [epf_index, epf_index]
 		palette_index = mob.palette_index
-		type_name = "Monster"
 	elif efx_search:
 		var efx: NTK_Effect = Renderers.effect_renderer.efx.effects[type_value]
 		var efx_frame_index = efx.effect_frames[0].frame_index
 		var indices: Indices = Indices.new(efx_frame_index, Renderers.effect_renderer.epfs)
 		var epf_index: int = indices.epf_index
-		frame_index = indices.frame_index
+		frame_index = indices.frame_indexBody
 		epf_option_str = "efx%d.dat:EFFECT%d.epf" % [epf_index, epf_index]
 		palette_index = efx.effect_frames[0].palette_index
-		type_name = "Effect"
+	elif arrow_search:
+		part_renderer = Renderers.character_renderer.arrow_renderer
+		part_epf_option_str = "arrow%d.dat:Arrow%d.epf"
 	elif body_search:
 		part_renderer = Renderers.character_renderer.body_renderer
 		part_epf_option_str = "body%d.dat:Body%d.epf"
-		type_name = "Body"
+	elif bow_search:
+		part_renderer = Renderers.character_renderer.bow_renderer
+		part_epf_option_str = "bow%d.dat:Bow%d.epf"
+	elif coat_search:
+		part_renderer = Renderers.character_renderer.coat_renderer
+		part_epf_option_str = "coat%d.dat:Coat%d.epf"
 	elif face_search:
 		part_renderer = Renderers.character_renderer.face_renderer
 		part_epf_option_str = "face%d.dat:Face%d.epf"
-		type_name = "Face"
+	elif face_dec_search:
+		part_renderer = Renderers.character_renderer.face_dec_renderer
+		part_epf_option_str = "FaceDec%d.dat:FaceDec%d.epf"
 	elif hair_search:
 		part_renderer = Renderers.character_renderer.hair_renderer
 		part_epf_option_str = "hair%d.dat:Hair%d.epf"
-		type_name = "Hair"
-	#
-	#if self.last_type != type_name:
-		#type_value = 0
-		#self.last_type = type_name
+	elif hair_dec_search:
+		part_renderer = Renderers.character_renderer.hair_dec_renderer
+		part_epf_option_str = "HairDec%d.dat:HairDec%d.epf"
+	elif helmet_search:
+		part_renderer = Renderers.character_renderer.helmet_renderer
+		part_epf_option_str = "helmet%d.dat:Helmet%d.epf"
+	elif mantle_search:
+		part_renderer = Renderers.character_renderer.mantle_renderer
+		part_epf_option_str = "mantle%d.dat:Mantle%d.epf"
+	elif shield_search:
+		part_renderer = Renderers.character_renderer.shield_renderer
+		part_epf_option_str = "shield%d.dat:Shield%d.epf"
+	elif spear_search:
+		part_renderer = Renderers.character_renderer.spear_renderer
+		part_epf_option_str = "spear%d.dat:Spear%d.epf"
+	elif sword_search:
+		part_renderer = Renderers.character_renderer.sword_renderer
+		part_epf_option_str = "sword%d.dat:Sword%d.epf"
 	
 	if part_renderer != null:
 		var part: Part = part_renderer.dsc.parts[type_value]
-		var part_frame_index = part.frame_index + part.animations[2].animation_frames[0].frame_offset if 2 in part.animations else 0
-		var indices: Indices = Indices.new(part_frame_index, Renderers.character_renderer.body_renderer.epfs)
+		var part_frame_index = part.frame_index + part.animations[2].animation_frames[0].frame_offset if 2 in part.animations else part.frame_index + 3
+		var indices: Indices = Indices.new(part_frame_index, part_renderer.epfs)
 		var epf_index: int = indices.epf_index
 		frame_index = indices.frame_index
 		epf_option_str = part_epf_option_str % [epf_index, epf_index]

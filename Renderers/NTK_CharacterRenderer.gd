@@ -3,7 +3,9 @@ class_name NTK_CharacterRenderer extends Node
 const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 const NTK_PartRenderer = preload("res://Renderers/NTK_PartRenderer.gd")
 
+var arrow_renderer: NTK_PartRenderer = null
 var body_renderer: NTK_PartRenderer = null
+var coat_renderer: NTK_PartRenderer = null
 var mantle_renderer: NTK_PartRenderer = null
 var face_renderer: NTK_PartRenderer = null
 var face_dec_renderer: NTK_PartRenderer = null
@@ -28,7 +30,11 @@ func _init() -> void:
 
 	# Create Renderers (Threaded)
 	renderer_threads.append(Thread.new())
+	renderer_threads[-1].start(func(): self.arrow_renderer = NTK_PartRenderer.new("Arrow", Renderers.char_dat, Renderers.misc_dat))
+	renderer_threads.append(Thread.new())
 	renderer_threads[-1].start(func(): self.body_renderer = NTK_PartRenderer.new("Body", Renderers.char_dat, Renderers.misc_dat))
+	renderer_threads.append(Thread.new())
+	renderer_threads[-1].start(func(): self.coat_renderer = NTK_PartRenderer.new("Coat", Renderers.char_dat, Renderers.misc_dat))
 	renderer_threads.append(Thread.new())
 	renderer_threads[-1].start(func(): self.mantle_renderer = NTK_PartRenderer.new("Mantle", Renderers.char_dat, Renderers.misc_dat))
 	renderer_threads.append(Thread.new())
