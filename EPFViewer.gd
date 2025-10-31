@@ -37,14 +37,14 @@ var updating_epf_index: bool = false
 
 var initialized: bool = false
 
-var last_type: String = "Hair"
+var last_type: String = "Coat"
 
 # Debug Values (Set on load)
 
 ## ( Update `last_type` above to match "type")
-var debug_epf_key := "hair0.dat:Hair0.epf"
-var debug_pal_key := "char.dat:Hair.pal"
-var debug_epf_index := 2650
+var debug_epf_key := "coat2.dat:Coat2.epf"
+var debug_pal_key := "char.dat:Coat.pal"
+var debug_epf_index := 2566
 var debug_pal_index := 0
 var debug_color_offset := 0
 var debug_start_scale := Vector2(6, 6)
@@ -449,10 +449,21 @@ func process_dat(dat_file_name_index: int) -> void:
 			mutex.unlock()
 
 func _sort(a: String, b: String) -> bool:
-	if a.to_lower() \
-		< b.to_lower():
-		return true
-	return false
+	var dat_regex: RegEx = RegEx.new()
+	dat_regex.compile("^([a-zA-Z]+)(\\d+).dat.*$")
+	
+	var a_match: RegExMatch = dat_regex.search(a.to_lower())
+	var b_match: RegExMatch = dat_regex.search(b.to_lower())
+	
+	if a_match and b_match:
+		var a_type: String = a_match.strings[1]
+		var b_type: String = b_match.strings[1]
+		var a_value: int = int(a_match.strings[2])
+		var b_value: int = int(b_match.strings[2])
+		if a_type == b_type:
+			return a_value < b_value
+
+	return a.to_lower() < b.to_lower()
 
 func populate_option_buttons() -> void:
 	var sorted_epfs := epf_list.keys()
