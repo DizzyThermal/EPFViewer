@@ -27,28 +27,38 @@ func create_pixel_data(
 		initial_color_offset: int=0) -> PackedByteArray:
 	var frame := get_frame(frame_index)
 	var palette := pal.get_palette(palette_index)
+	var pixel_count := frame.width * frame.height
 	var pixel_data := PackedByteArray()
-	pixel_data.resize(frame.width * frame.height * 4)
-	
-	var animated_colors := []
-	for animation_range in palette.animation_ranges:
-		var min_index = animation_range.min_index
-		var max_index = animation_range.max_index
-		animated_colors.append(range(min_index, max_index+1))
+	pixel_data.resize(pixel_count * 4)
 
-	for i in range(frame.width * frame.height):
-		var original_color_index := frame.raw_pixel_data.decode_u8(i)
-		var color_index := (original_color_index + initial_color_offset) % Resources.palette_color_count
-		if len(Resources.offset_range) > 0 and original_color_index not in Resources.offset_range:
-			color_index = original_color_index
-		for animated_range in animated_colors:
-			if color_index in animated_range:
-				var animated_colors_index = (animated_range.find(color_index) + animated_color_offset) % len(animated_range)
-				color_index = animated_range[animated_colors_index]
+	var color_map = PackedInt32Array()
+	color_map.resize(Resources.palette_color_count)
+
+	for i in range(Resources.palette_color_count):
+		var original_idx = i
+		var current_idx = i
+	
+		if len(Resources.offset_range) == 0 or original_idx in Resources.offset_range:
+			current_idx = (original_idx + initial_color_offset) % Resources.palette_color_count
+
+		for anim in palette.animation_ranges:
+			if current_idx >= anim.min_index and current_idx <= anim.max_index:
+				var range_len = anim.max_index - anim.min_index + 1
+				var current_pos = current_idx - anim.min_index
+				var shifted_pos = posmod(current_pos + animated_color_offset, range_len)
+				current_idx = anim.min_index + shifted_pos
 				break
 
-		var color := palette.colors[color_index]
-		pixel_data.encode_u32((i * 4), color.to_abgr32())
+		color_map[i] = current_idx
+
+	var raw = frame.raw_pixel_data 
+	var palette_colors = palette.colors
+
+	for i in range(pixel_count):
+		var raw_idx = raw[i]
+		var mapped_idx = color_map[raw_idx]
+		var color_u32 = palette_colors[mapped_idx].to_abgr32()
+		pixel_data.encode_u32(i * 4, color_u32)
 
 	return pixel_data
 
