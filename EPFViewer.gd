@@ -37,25 +37,26 @@ var updating_epf_index: bool = false
 
 var initialized: bool = false
 
-var last_type: String = "Coat"
+var last_type: String = "Sword"
 
 # Debug Values (Set on load)
 
 ## ( Update `last_type` above to match "type")
-var debug_epf_key := "coat2.dat:Coat2.epf"
-var debug_pal_key := "char.dat:Coat.pal"
-var debug_epf_index := 2566
+## Flameblade
+var debug_epf_key := "sword0.dat:Sword0.epf"
+var debug_pal_key := "char.dat:Sword.pal"
+var debug_epf_index := 86
 var debug_pal_index := 0
 var debug_color_offset := 0
-var debug_start_scale := Vector2(6, 6)
+var debug_start_scale := Vector2(8, 8)
 
-## Flameblade
-#var debug_epf_key := "sword0.dat:Sword0.epf"
-#var debug_pal_key := "char.dat:Sword.pal"
-#var debug_epf_index := 86
+## Spirit Ox
+#var debug_epf_key := "mon4.dat:mon4.epf"
+#var debug_pal_key := "mon.dat:monster.pal"
+#var debug_epf_index := 208
 #var debug_pal_index := 0
-#var debug_color_offset := 0
-#var debug_start_scale := Vector2(8, 8)
+#var debug_color_offset := 160
+#var debug_start_scale := Vector2(4, 4)
 
 var current_epf_key := ""
 var current_pal_key := ""
@@ -75,6 +76,7 @@ var spinbox_change_cooldown := 0.0
 
 var dat_files: Array[String] = []
 var mutex: Mutex = Mutex.new()
+var last_frame_key: String = ""
 
 func _ready() -> void:
 	$UI.visible = false
@@ -647,26 +649,46 @@ func _render(force_grid_render: bool=false) -> void:
 	if pal_dat_name not in dat_list:
 		dat_list[pal_dat_name] = DatFileHandler.new(pal_dat_name)
 
-	var frame_texture := ImageTexture.create_from_image(
-		NTK_Renderer.get_image_with_file_handlers(
-			dat_list[epf_dat_name],
-			epf_list[epf_key],
-			dat_list[pal_dat_name],
-			pal_list[pal_key],
-			epf_index_spinbox.value,
-			pal_index_spinbox.value,
-			animated_color_offset,
-			color_offset_spinbox.value,
-			false))
+	var frame_key = "-".join([
+		epf_key,
+		pal_key,
+		epf_index_spinbox.value,
+		pal_index_spinbox.value,
+	])
+	if frame_key != self.last_frame_key:
+		var index_texture: ImageTexture = NTK_Renderer.get_index_texture(frame)
+		var mask_texture: Texture2D = null
+		if frame.mask_image != null:
+			mask_texture = ImageTexture.create_from_image(frame.mask_image)
+		var palette_texture: ImageTexture = NTK_Renderer.create_palette_texture(palette)
+		var frame_shader := load("res://Shaders/NTK_FrameShader.gdshader")
+		var shader_material := ShaderMaterial.new()
+		shader_material.shader = frame_shader
+		shader_material.set_shader_parameter("palette_tex", palette_texture)
+		shader_material.set_shader_parameter("mask_tex", mask_texture)
+		shader_material.set_shader_parameter("initial_color_offset", color_offset_spinbox.value)
+		shader_material.set_shader_parameter("animated_color_offset", animated_color_offset)
+		var anim_count: int = min(len(palette.animation_ranges), 16)
+		shader_material.set_shader_parameter("animation_range_count", anim_count)
 
-	if frame_texture:
+		var ranges := []
+		for i in range(anim_count):
+			var r = palette.animation_ranges[i]
+			ranges.append(Vector4i(r.min_index, r.max_index, 0, 0))
+		shader_material.set_shader_parameter("animation_ranges", ranges)
+
 		clear_frame_container()
 		frame_sprite = Sprite2D.new()
-		frame_sprite.texture = frame_texture
+		frame_sprite.texture = index_texture
+		frame_sprite.material = shader_material
 		frame_container.add_child(frame_sprite)
 		frame_sprite.scale = current_scale
-	else:
-		clear_frame_container()
+		self.last_frame_key = frame_key
+	elif frame_sprite != null and frame_sprite.material != null:
+		var shader_material: ShaderMaterial = frame_sprite.material
+		shader_material.set_shader_parameter("initial_color_offset", color_offset_spinbox.value)
+		shader_material.set_shader_parameter("animated_color_offset", animated_color_offset)
+		frame_sprite.scale = current_scale
 
 func get_option_index(
 		option_button: OptionButton,

@@ -20,6 +20,51 @@ func prune_cache(images_to_remove: int) -> void:
 	for image_key in keys_to_remove:
 		self.images.erase(image_key)
 
+static func create_palette_texture(palette: Palette) -> ImageTexture:
+	var bytes := PackedByteArray()
+	bytes.resize(Resources.palette_color_count * 4)
+
+	for i in range(Resources.palette_color_count):
+		var c: Color = palette.colors[i]
+		var idx := i * 4
+		bytes[idx] = c.r8
+		bytes[idx + 1] = c.g8
+		bytes[idx + 2] = c.b8
+		bytes[idx + 3] = c.a8
+
+	return ImageTexture.create_from_image(
+		Image.create_from_data(
+			Resources.palette_color_count,
+			1,
+			false,
+			Image.FORMAT_RGBA8,
+			bytes
+		)
+	)
+
+func create_index_texture(frame_index: int) -> ImageTexture:
+	var frame: NTK_Frame = get_frame(frame_index)
+	var pixel_count: int = frame.width * frame.height
+	var bytes := PackedByteArray()
+	bytes.resize(pixel_count * 4)
+
+	for pixel in range(pixel_count):
+		var idx := pixel * 4
+		bytes[idx] = frame.raw_pixel_data[pixel]
+		bytes[idx + 1] = 0
+		bytes[idx + 2] = 0
+		bytes[idx + 3] = 255
+
+	return ImageTexture.create_from_image(
+		Image.create_from_data(
+			frame.width,
+			frame.height,
+			false,
+			Image.FORMAT_RGBA8,
+			bytes
+		)
+	)
+
 func create_pixel_data(
 		frame_index: int,
 		palette_index: int,
@@ -37,7 +82,7 @@ func create_pixel_data(
 	for i in range(Resources.palette_color_count):
 		var original_idx = i
 		var current_idx = i
-	
+
 		if len(Resources.offset_range) == 0 or original_idx in Resources.offset_range:
 			current_idx = (original_idx + initial_color_offset) % Resources.palette_color_count
 
@@ -51,7 +96,7 @@ func create_pixel_data(
 
 		color_map[i] = current_idx
 
-	var raw = frame.raw_pixel_data 
+	var raw = frame.raw_pixel_data
 	var palette_colors = palette.colors
 
 	for i in range(pixel_count):
@@ -157,15 +202,11 @@ func create_animation_spritesheet(
 static func get_frame_from_dat(
 		epf_dat_name: String,
 		epf_name: String,
-		pal_dat_name: String,
-		pal_name: String,
 		frame_index: int=0,
 		palette_index: int=0) -> NTK_Frame:
 	var epf_dat := DatFileHandler.new(epf_dat_name)
-	var pal_dat := DatFileHandler.new(pal_dat_name)
 	var renderer := NTK_Renderer.new()
 	renderer.epfs.append(EpfFileHandler.new(epf_dat.get_file(epf_name)))
-	renderer.pal = PalFileHandler.new(pal_dat.get_file(pal_name))
 
 	return renderer.get_frame(frame_index)
 
@@ -194,6 +235,35 @@ static func get_image_with_dats(
 	renderer.pal = PalFileHandler.new(pal_dat.get_file(pal_name))
 
 	return renderer.render_frame(frame_index, palette_index, true, color_offset)
+
+static func get_index_texture(frame: NTK_Frame) -> ImageTexture:
+	var pixel_count: int = frame.width * frame.height
+	var bytes := PackedByteArray()
+	bytes.resize(pixel_count * 4)
+
+	for pixel in range(pixel_count):
+		var idx := pixel * 4
+		bytes[idx] = frame.raw_pixel_data[pixel]
+		bytes[idx + 1] = 0
+		bytes[idx + 2] = 0
+		bytes[idx + 3] = 255
+
+	return ImageTexture.create_from_image(
+		Image.create_from_data(
+			frame.width,
+			frame.height,
+			false,
+			Image.FORMAT_RGBA8,
+			bytes
+		)
+	)
+
+static func get_palette_texture(
+		pal_dat: DatFileHandler,
+		pal: PalFileHandler,
+		palette_index: int=0) -> ImageTexture:
+
+	return NTK_Renderer.create_palette_texture(pal.get_palette(palette_index))
 
 static func get_image_with_file_handlers(
 		epf_dat: DatFileHandler,

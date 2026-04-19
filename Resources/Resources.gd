@@ -8,9 +8,6 @@ var palette_color_count := 256
 var data_dir := Database.get_config_item_value("data_dir")
 var desktop_dir := ""
 
-# TODO: See if this is problematic for future items
-var offset_range: Array[int] = []
-
 enum EntityType {
 	Player,
 	Monster,
@@ -41,12 +38,6 @@ func _init():
 		desktop_dir = OS.get_environment("USERPROFILE") + "/Desktop/"
 	else:
 		desktop_dir = OS.get_environment("HOME") + "/Desktop/"
-
-	# Generate Offset Range
-	for i in range(48, 176):
-		offset_range.append(i)
-	for i in range(176, 256):
-		offset_range.append(i)
 
 static func arrays_intersect(
 		array_1: Array[int],

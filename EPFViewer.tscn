@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://b680ng7y6g8ol"]
+[gd_scene format=3 uid="uid://b680ng7y6g8ol"]
 
 [ext_resource type="Script" uid="uid://bj1cujbbg72dc" path="res://EPFViewer.gd" id="1_c07of"]
 
@@ -14,12 +14,12 @@
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bk01i"]
 
-[node name="EPFViewer" type="Node2D"]
+[node name="EPFViewer" type="Node2D" unique_id=1233246846]
 script = ExtResource("1_c07of")
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="UI" type="CanvasLayer" parent="." unique_id=1272548142]
 
-[node name="ColorRect" type="ColorRect" parent="UI"]
+[node name="ColorRect" type="ColorRect" parent="UI" unique_id=815371459]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -29,7 +29,7 @@ size_flags_horizontal = 3
 color = Color(0.403922, 0.403922, 0.403922, 1)
 metadata/_edit_use_anchors_ = true
 
-[node name="FrameContainer" type="CenterContainer" parent="UI"]
+[node name="FrameContainer" type="CenterContainer" parent="UI" unique_id=1760343275]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -38,7 +38,7 @@ anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Title" type="ColorRect" parent="UI"]
+[node name="Title" type="ColorRect" parent="UI" unique_id=537237338]
 custom_minimum_size = Vector2(0, 30)
 anchors_preset = -1
 anchor_right = 1.0
@@ -47,7 +47,7 @@ offset_bottom = 0.0480003
 size_flags_horizontal = 3
 metadata/_edit_use_anchors_ = true
 
-[node name="TitleLabel" type="Label" parent="UI/Title"]
+[node name="TitleLabel" type="Label" parent="UI/Title" unique_id=1110280027]
 modulate = Color(0, 0, 0, 1)
 layout_mode = 1
 anchors_preset = 8
@@ -66,14 +66,14 @@ horizontal_alignment = 1
 vertical_alignment = 1
 metadata/_edit_use_anchors_ = true
 
-[node name="EpfLabel" type="Label" parent="UI"]
+[node name="EpfLabel" type="Label" parent="UI" unique_id=112039257]
 offset_left = 10.0
 offset_top = 46.0
 offset_right = 75.0
 offset_bottom = 69.0
 text = "EPF File:"
 
-[node name="EpfOptions" type="OptionButton" parent="UI"]
+[node name="EpfOptions" type="OptionButton" parent="UI" unique_id=1253515189]
 offset_left = 10.0
 offset_top = 70.0
 offset_right = 55.0
@@ -81,14 +81,14 @@ offset_bottom = 90.0
 action_mode = 1
 allow_reselect = true
 
-[node name="EpfIndexLabel" type="Label" parent="UI"]
+[node name="EpfIndexLabel" type="Label" parent="UI" unique_id=478138834]
 offset_left = 10.0
 offset_top = 102.0
 offset_right = 154.0
 offset_bottom = 125.0
 text = "Frame Index (0-0):"
 
-[node name="EpfIndexSpinbox" type="SpinBox" parent="UI"]
+[node name="EpfIndexSpinbox" type="SpinBox" parent="UI" unique_id=739933618]
 offset_left = 10.0
 offset_top = 126.0
 offset_right = 93.0625
@@ -97,14 +97,14 @@ min_value = -1.0
 max_value = 0.0
 alignment = 1
 
-[node name="TypeIndexLabel" type="Label" parent="UI"]
+[node name="TypeIndexLabel" type="Label" parent="UI" unique_id=1486486421]
 offset_left = 10.0
 offset_top = 273.0
 offset_right = 154.0
 offset_bottom = 296.0
 text = "Type Index (0-0):"
 
-[node name="TypeIndexSpinbox" type="SpinBox" parent="UI"]
+[node name="TypeIndexSpinbox" type="SpinBox" parent="UI" unique_id=232710629]
 offset_left = 10.0
 offset_top = 297.0
 offset_right = 96.5625
@@ -113,14 +113,14 @@ min_value = -1.0
 max_value = 0.0
 alignment = 1
 
-[node name="ColorOffsetLabel" type="Label" parent="UI"]
+[node name="ColorOffsetLabel" type="Label" parent="UI" unique_id=410080571]
 offset_left = 10.0
 offset_top = 166.0
 offset_right = 154.0
 offset_bottom = 189.0
 text = "Initial Color Offset (0-255):"
 
-[node name="ColorOffsetSpinbox" type="SpinBox" parent="UI"]
+[node name="ColorOffsetSpinbox" type="SpinBox" parent="UI" unique_id=1068149343]
 offset_left = 10.0
 offset_top = 190.0
 offset_right = 93.0625
@@ -129,7 +129,7 @@ min_value = -1.0
 max_value = 256.0
 alignment = 1
 
-[node name="ReverseCheckbox" type="CheckBox" parent="UI"]
+[node name="ReverseCheckbox" type="CheckBox" parent="UI" unique_id=289634006]
 offset_left = 101.0
 offset_top = 181.0
 offset_right = 188.0
@@ -143,7 +143,7 @@ theme_override_styles/disabled = SubResource("StyleBoxEmpty_nfsbo")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_bk01i")
 text = "Reverse"
 
-[node name="AnimatedPalettesOnlyCheckbox" type="CheckBox" parent="UI"]
+[node name="AnimatedPalettesOnlyCheckbox" type="CheckBox" parent="UI" unique_id=1884685833]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -161,7 +161,7 @@ theme_override_styles/disabled = SubResource("StyleBoxEmpty_nfsbo")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_bk01i")
 text = "Skip Static"
 
-[node name="AnimationSpeedSlider" type="HSlider" parent="UI"]
+[node name="AnimationSpeedSlider" type="HSlider" parent="UI" unique_id=1643470332]
 offset_left = 13.0
 offset_top = 232.0
 offset_right = 182.0
@@ -170,14 +170,14 @@ min_value = 1.0
 max_value = 11.0
 value = 3.0
 
-[node name="AnimationSpeedLabel" type="Label" parent="UI"]
+[node name="AnimationSpeedLabel" type="Label" parent="UI" unique_id=1466759401]
 offset_left = 76.0
 offset_top = 247.0
 offset_right = 126.0
 offset_bottom = 270.0
 text = "Speed"
 
-[node name="PalLabel" type="Label" parent="UI"]
+[node name="PalLabel" type="Label" parent="UI" unique_id=1721004412]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -189,7 +189,7 @@ grow_horizontal = 0
 text = "PAL File:"
 metadata/_edit_use_anchors_ = true
 
-[node name="PalOptions" type="OptionButton" parent="UI"]
+[node name="PalOptions" type="OptionButton" parent="UI" unique_id=392258842]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -202,7 +202,7 @@ action_mode = 1
 allow_reselect = true
 metadata/_edit_use_anchors_ = true
 
-[node name="PalIndexLabel" type="Label" parent="UI"]
+[node name="PalIndexLabel" type="Label" parent="UI" unique_id=363430810]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -214,7 +214,7 @@ grow_horizontal = 0
 text = "Palette Index (0-0):"
 metadata/_edit_use_anchors_ = true
 
-[node name="PalIndexSpinbox" type="SpinBox" parent="UI"]
+[node name="PalIndexSpinbox" type="SpinBox" parent="UI" unique_id=1487703445]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -228,7 +228,7 @@ max_value = 0.0
 alignment = 1
 metadata/_edit_use_anchors_ = true
 
-[node name="ColorGrid" type="GridContainer" parent="UI"]
+[node name="ColorGrid" type="GridContainer" parent="UI" unique_id=1245494227]
 custom_minimum_size = Vector2(128, 512)
 layout_direction = 2
 anchors_preset = 1
@@ -246,7 +246,7 @@ theme_override_constants/v_separation = 0
 columns = 8
 metadata/_edit_use_anchors_ = true
 
-[node name="AnimatedPaletteLabel" type="Label" parent="UI"]
+[node name="AnimatedPaletteLabel" type="Label" parent="UI" unique_id=1833981187]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -257,7 +257,7 @@ offset_bottom = 186.0
 grow_horizontal = 0
 theme_override_font_sizes/font_size = 12
 
-[node name="ColorInfoContainer" type="HBoxContainer" parent="UI"]
+[node name="ColorInfoContainer" type="HBoxContainer" parent="UI" unique_id=1377798318]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -268,7 +268,7 @@ offset_bottom = 185.0
 grow_horizontal = 0
 metadata/_edit_use_anchors_ = true
 
-[node name="ColorInfoIndex" type="Label" parent="UI"]
+[node name="ColorInfoIndex" type="Label" parent="UI" unique_id=1148901117]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
