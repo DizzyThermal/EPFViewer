@@ -30,7 +30,7 @@ static func create_palette_texture(palette: Palette) -> ImageTexture:
 		bytes[idx] = c.r8
 		bytes[idx + 1] = c.g8
 		bytes[idx + 2] = c.b8
-		bytes[idx + 3] = c.a8
+		bytes[idx + 3] = 255
 
 	return ImageTexture.create_from_image(
 		Image.create_from_data(

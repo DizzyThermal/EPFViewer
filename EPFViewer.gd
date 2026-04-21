@@ -579,7 +579,7 @@ func _render(force_grid_render: bool=false) -> void:
 	load_pal(pal_key, current_pal_key != pal_key)
 	current_pal_key = pal_key
 
-	var palette = pal_list[pal_key].get_palette(pal_index_spinbox.value, 255)
+	var palette = pal_list[pal_key].get_palette(pal_index_spinbox.value)
 	if palette == null:
 		clear_frame_container()
 		return
