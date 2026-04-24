@@ -102,7 +102,7 @@ func create_effect_spritesheet(
 		var frame_palette := palette_index
 		if frame_palette == -1:
 			frame_palette = frm.palette_indices[effect.effect_frames[i].frame_index]
-		images.append(render_frame(effect.effect_frames[i].frame_index, frame_palette))
+		#images.append(render_frame(effect.effect_frames[i].frame_index, frame_palette))
 
 	var sprite_sheet := Image.create(effect_pivot.width * len(images), effect_pivot.height, false, Image.FORMAT_RGBA8)
 	for offset in range(len(images)):

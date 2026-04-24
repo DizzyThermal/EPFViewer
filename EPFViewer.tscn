@@ -19,22 +19,10 @@ script = ExtResource("1_c07of")
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1272548142]
 
-[node name="ColorRect" type="ColorRect" parent="UI" unique_id=815371459]
+[node name="FrameContainer" type="CenterContainer" parent="UI" unique_id=353926470]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-color = Color(0.403922, 0.403922, 0.403922, 1)
-metadata/_edit_use_anchors_ = true
-
-[node name="FrameContainer" type="CenterContainer" parent="UI" unique_id=1760343275]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
 

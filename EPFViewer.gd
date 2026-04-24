@@ -1,19 +1,18 @@
 extends Node2D
 
 const color_tile_size := 16
-const min_frame_size := 1
-const max_frame_size := 16
+const min_frame_size: Vector2i = Vector2i(1, 1)
+const max_frame_size: Vector2i = Vector2i(16, 16)
 
 const Indices = preload("res://DataTypes/Indices.gd")
 const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
 
+@onready var frame_container: CenterContainer = $UI/FrameContainer
 @onready var epf_options: OptionButton = $UI/EpfOptions
 @onready var epf_index_spinbox: SpinBox = $UI/EpfIndexSpinbox
 
 @onready var type_index_label: Label = $UI/TypeIndexLabel
 @onready var type_index_spinbox: SpinBox = $UI/TypeIndexSpinbox
-
-@onready var frame_container: CenterContainer = $UI/FrameContainer
 
 @onready var pal_options: OptionButton = $UI/PalOptions
 @onready var pal_index_spinbox: SpinBox = $UI/PalIndexSpinbox
@@ -61,8 +60,8 @@ var debug_start_scale := Vector2(8, 8)
 var current_epf_key := ""
 var current_pal_key := ""
 
-var frame_sprite: Sprite2D = null
-var current_scale := Vector2(1, 1)
+var frame_texture: FrameTextureRect = null
+var current_scale: Vector2i = Vector2i(1, 1)
 
 var animated_color_offset := 0
 
@@ -96,7 +95,7 @@ func _ready() -> void:
 		offset_range.append(i)
 	for i in range(176, 256):
 		offset_range.append(i)
-	
+
 	WorkerThreadPool.wait_for_group_task_completion(dat_task_id)
 	populate_option_buttons()
 	get_viewport().connect("gui_focus_changed", _on_focus_changed)
@@ -107,6 +106,7 @@ func _process(delta) -> void:
 			return
 
 		if debug_epf_key and debug_pal_key:
+			current_scale = debug_start_scale
 			epf_options.select(get_option_index(epf_options, debug_epf_key))
 			pal_options.select(get_option_index(pal_options, debug_pal_key))
 			load_pal(debug_pal_key, current_pal_key != debug_pal_key)
@@ -118,35 +118,31 @@ func _process(delta) -> void:
 			if debug_color_offset:
 				color_offset_spinbox.value = debug_color_offset
 			_render(true)
-			current_scale = debug_start_scale
 			update_type_spinbox()
-		
+
 		$UI.visible = true
 		initialized = true
 
-	if frame_sprite != null:
+	if frame_texture != null:
+		var frame: NTK_Frame = epf_list[current_epf_key].get_frame(epf_index_spinbox.value, true)
 		if Input.is_action_just_pressed("zoom-in") and \
-				frame_sprite.scale.x < max_frame_size and \
-				over_sprite():
-			frame_sprite.scale += Vector2(1, 1)
-			current_scale = frame_sprite.scale
+				current_scale < max_frame_size:
+			current_scale += Vector2i(1, 1)
+			frame_texture.custom_minimum_size = frame.size * current_scale
 		elif Input.is_action_just_pressed("zoom-out") and \
-				frame_sprite.scale.x > min_frame_size and \
-				over_sprite():
-			frame_sprite.scale -= Vector2(1, 1)
-			current_scale = frame_sprite.scale
-		elif Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and \
-				over_sprite():
-			var frame_image := "-".join([
+				current_scale > min_frame_size:
+			current_scale -= Vector2i(1, 1)
+			frame_texture.custom_minimum_size = frame.size * current_scale
+		elif Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+			var frame_image: String = "-".join([
 				current_epf_key,
 				epf_index_spinbox.value,
 				current_pal_key,
 				pal_index_spinbox.value,
 				color_offset_spinbox.value,
-				# animated_color_offset, # Confusing for static images
 			]).replace(":", "-") + ".png"
 			if not FileAccess.file_exists(Resources.desktop_dir + frame_image):
-				Debug.save_png_to_desktop(frame_sprite.texture.get_image(), frame_image)
+				Debug.save_png_to_desktop(frame_texture.texture.get_image(), frame_image)
 
 	render_cooldown -= delta
 	if render_cooldown <= 0:
@@ -161,7 +157,7 @@ func _process(delta) -> void:
 		render_cooldown = 1.4 / animation_speed_slider.value
 
 	spinbox_change_cooldown -= delta
-	
+
 	if Input.is_action_just_pressed("increment_spinbox") or Input.is_action_just_pressed("decrement_spinbox"):
 		spinbox_change_cooldown = 0
 
@@ -398,14 +394,14 @@ func update_type_spinbox() -> void:
 		for part_idx in range(type_count):
 			if type_index >= 0:
 				break
-			
+
 			var part: Part = renderer.dsc.parts[part_idx]
 			var part_frame_index: int = part.frame_index
 			for animation_key in part.animations.keys():
 				var animation: PartAnimation = part.animations[animation_key]
 				if type_index >= 0:
 					break
-				
+
 				for animation_frame in animation.animation_frames:
 					var animation_frame_offset: int = part_frame_index + animation_frame.frame_offset
 					if animation_frame_offset == global_frame_index:
@@ -453,10 +449,10 @@ func process_dat(dat_file_name_index: int) -> void:
 func _sort(a: String, b: String) -> bool:
 	var dat_regex: RegEx = RegEx.new()
 	dat_regex.compile("^([a-zA-Z]+)(\\d+).dat.*$")
-	
+
 	var a_match: RegExMatch = dat_regex.search(a.to_lower())
 	var b_match: RegExMatch = dat_regex.search(b.to_lower())
-	
+
 	if a_match and b_match:
 		var a_type: String = a_match.strings[1]
 		var b_type: String = b_match.strings[1]
@@ -480,13 +476,6 @@ func populate_option_buttons() -> void:
 		if pal:
 			self.pal_options.add_item(pal)
 
-func over_sprite() -> bool:
-	var container_rect := frame_container.get_rect()
-	container_rect.position -= Vector2(300, 400)
-	container_rect.size += Vector2(600, 800)
-
-	return container_rect.has_point(get_global_mouse_position())
-
 func load_pal(pal_key: String, reset: bool=false) -> void:
 	current_pal_key = pal_key
 	if not pal_list[pal_key]:
@@ -506,7 +495,7 @@ func create_color_rect(
 
 	color_rect.color = color
 	color_rect.custom_minimum_size = size
-	
+
 	if color_int >= 0:
 		var color_label := Label.new()
 		color_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -530,7 +519,7 @@ func update_color_info(color: Color, color_index: int) -> void:
 	color_info_container.add_child(create_color_rect(Color(color.r, 0, 0), color.r8))
 	color_info_container.add_child(create_color_rect(Color(0, color.g, 0), color.g8))
 	color_info_container.add_child(create_color_rect(Color(0, 0, color.b), color.b8))
-	
+
 	color_info_index_label.text = str(color_index)
 
 func clear_grid() -> void:
@@ -548,11 +537,6 @@ func load_frame(epf_key: String, reset: bool=false) -> void:
 		epf_index_spinbox.value = 0
 	epf_index_spinbox.max_value = epf_list[epf_key].frame_count
 	$UI/EpfIndexLabel.text = "Frame Index (0-" + str(int(epf_index_spinbox.max_value - 1)) + ")"
-
-func clear_frame_container() -> void:
-	for child in frame_container.get_children():
-		child.queue_free()
-		frame_container.remove_child(child)
 
 func update_spinboxes() -> void:
 	if epf_index_spinbox.value == epf_index_spinbox.min_value:
@@ -581,11 +565,13 @@ func _render(force_grid_render: bool=false) -> void:
 
 	var palette = pal_list[pal_key].get_palette(pal_index_spinbox.value)
 	if palette == null:
-		clear_frame_container()
+		if frame_texture != null:
+			frame_texture.free()
+			frame_texture = null
 		return
 
 	animated_palette_label.text = "[Animated]" if len(palette.animation_ranges) > 0 else ""
-	
+
 	var epf_key = epf_options.get_item_text(epf_options.selected)
 	load_frame(epf_key, current_epf_key != epf_key)
 	current_epf_key = epf_key
@@ -642,7 +628,7 @@ func _render(force_grid_render: bool=false) -> void:
 			color_grid.add_child(color_rect)
 
 	# Update Frame
-	var pal_dat_name = pal_key.split(":")[0] 
+	var pal_dat_name = pal_key.split(":")[0]
 	var pal_name = pal_key.split(":")[1]
 	if epf_dat_name not in dat_list:
 		dat_list[epf_dat_name] = DatFileHandler.new(epf_dat_name)
@@ -656,39 +642,20 @@ func _render(force_grid_render: bool=false) -> void:
 		pal_index_spinbox.value,
 	])
 	if frame_key != self.last_frame_key:
-		var index_texture: ImageTexture = NTK_Renderer.get_index_texture(frame)
-		var mask_texture: Texture2D = null
-		if frame.mask_image != null:
-			mask_texture = ImageTexture.create_from_image(frame.mask_image)
-		var palette_texture: ImageTexture = NTK_Renderer.create_palette_texture(palette)
-		var frame_shader := load("res://Shaders/NTK_FrameShader.gdshader")
-		var shader_material := ShaderMaterial.new()
-		shader_material.shader = frame_shader
-		shader_material.set_shader_parameter("palette_tex", palette_texture)
-		shader_material.set_shader_parameter("mask_tex", mask_texture)
-		shader_material.set_shader_parameter("initial_color_offset", color_offset_spinbox.value)
-		shader_material.set_shader_parameter("animated_color_offset", animated_color_offset)
-		var anim_count: int = min(len(palette.animation_ranges), 16)
-		shader_material.set_shader_parameter("animation_range_count", anim_count)
-
-		var ranges := []
-		for i in range(anim_count):
-			var r = palette.animation_ranges[i]
-			ranges.append(Vector4i(r.min_index, r.max_index, 0, 0))
-		shader_material.set_shader_parameter("animation_ranges", ranges)
-
-		clear_frame_container()
-		frame_sprite = Sprite2D.new()
-		frame_sprite.texture = index_texture
-		frame_sprite.material = shader_material
-		frame_container.add_child(frame_sprite)
-		frame_sprite.scale = current_scale
 		self.last_frame_key = frame_key
-	elif frame_sprite != null and frame_sprite.material != null:
-		var shader_material: ShaderMaterial = frame_sprite.material
+		if frame_texture != null:
+			frame_texture.free()
+			frame_texture = null
+		frame_texture = FrameTextureRect.new(frame_key, frame, palette, color_offset_spinbox.value)
+		frame_texture.custom_minimum_size = frame.size * current_scale
+		frame_texture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		frame_texture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		frame_container.add_child(frame_texture)
+	elif frame_texture != null and frame_texture.material != null:
+		var shader_material: ShaderMaterial = frame_texture.material
 		shader_material.set_shader_parameter("initial_color_offset", color_offset_spinbox.value)
 		shader_material.set_shader_parameter("animated_color_offset", animated_color_offset)
-		frame_sprite.scale = current_scale
+		frame_texture.custom_minimum_size = frame.size * current_scale
 
 func get_option_index(
 		option_button: OptionButton,
@@ -702,7 +669,7 @@ func get_option_index(
 				not exact_match and option_text.to_lower() == option_string.to_lower():
 			option_index = i
 			break
-	
+
 	return option_index
 
 func match_palette() -> void:
@@ -799,7 +766,7 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 	var epf_option_str: String = current_epf_key
 	var frame_index: int = -1
 	var palette_index: int = 0
-	
+
 	var part_renderer: NTK_PartRenderer
 	var part_epf_option_str: String
 	if mon_search:
@@ -857,7 +824,7 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 	elif sword_search:
 		part_renderer = Renderers.character_renderer.sword_renderer
 		part_epf_option_str = "sword%d.dat:Sword%d.epf"
-	
+
 	if part_renderer != null:
 		var part: Part = part_renderer.dsc.parts[type_value]
 		var part_frame_index = part.frame_index + part.animations[2].animation_frames[0].frame_offset if 2 in part.animations else part.frame_index + 3
@@ -866,7 +833,7 @@ func _on_type_index_spinbox_value_changed(type_value: int):
 		frame_index = indices.frame_index
 		epf_option_str = part_epf_option_str % [epf_index, epf_index]
 		palette_index = part.palette_index
-	
+
 	if current_epf_key != epf_option_str:
 		epf_options.select(get_option_index(epf_options, epf_option_str))
 		current_epf_key = epf_option_str
