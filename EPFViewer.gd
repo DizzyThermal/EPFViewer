@@ -134,15 +134,25 @@ func _process(delta) -> void:
 			current_scale -= Vector2i(1, 1)
 			frame_texture.custom_minimum_size = frame.size * current_scale
 		elif Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
-			var frame_image: String = "-".join([
+			var frame_filename: String = "-".join([
 				current_epf_key,
 				epf_index_spinbox.value,
 				current_pal_key,
 				pal_index_spinbox.value,
 				color_offset_spinbox.value,
 			]).replace(":", "-") + ".png"
-			if not FileAccess.file_exists(Resources.desktop_dir + frame_image):
-				Debug.save_png_to_desktop(frame_texture.texture.get_image(), frame_image)
+			if not FileAccess.file_exists(Resources.desktop_dir + frame_filename):
+				var viewport = SubViewport.new()
+				viewport.size = frame_texture.ntk_frame.size
+				viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+				var duplicate_rect = frame_texture.duplicate()
+				duplicate_rect.custom_minimum_size = frame_texture.ntk_frame.size
+				duplicate_rect.position = Vector2.ZERO
+				viewport.add_child(duplicate_rect)
+				add_child(viewport)
+				await RenderingServer.frame_post_draw
+				Debug.save_png_to_desktop(viewport.get_texture().get_image(), frame_filename)
+				viewport.queue_free()
 
 	render_cooldown -= delta
 	if render_cooldown <= 0:
