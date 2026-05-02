@@ -7,11 +7,15 @@ var y := 0
 var width := 0
 var height := 0
 
-func _init(x: int, y: int, width: int, height: int):
-	self.x = x
-	self.y = y
-	self.width = width
-	self.height = height
+func _init(
+		_x: int,
+		_y: int,
+		_width: int,
+		_height: int) -> void:
+	self.x = _x
+	self.y = _y
+	self.width = _width
+	self.height = _height
 
 static func get_pivot(
 		frames: Array[NTK_Frame],

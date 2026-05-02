@@ -23,7 +23,7 @@ func _init(
 	self.palette = _palette
 	self.color_offset = _color_offset
 	self.centered = false
-	self.offset = Vector2i(self.ntk_frame.left, self.ntk_frame.top)
+	self.offset = self.ntk_frame.pivot
 
 	# Frame Initialization
 	if not FrameCache.has_item(self.frame_key):
@@ -37,6 +37,7 @@ func _init(
 			shader_material.shader = frame_shader
 			shader_material.set_shader_parameter("mask_tex", mask_texture)
 			shader_material.set_shader_parameter("palette_tex", palette_texture)
+			shader_material.set_shader_parameter("animated_color_offset", GameState.palette_animation_tick)
 			shader_material.set_shader_parameter("animation_range_count", palette_animation_count)
 			shader_material.set_shader_parameter("initial_color_offset", self.color_offset)
 			var ranges: Array[Vector4i] = []
@@ -50,7 +51,7 @@ func _init(
 				shader_material
 			)
 
-	if FrameCache.has_item(self.frame_key):
+	if FrameCache.has_item(frame_key):
 		if self.palette.is_animated:
 			var frame_raw_pixel_data: Array[int] = self.ntk_frame.raw_pixel_data_array
 			if Resources.arrays_intersect(self.palette.animation_indices, frame_raw_pixel_data):
@@ -60,3 +61,9 @@ func _init(
 		var cache_item: FrameCacheItem = FrameCache.get_item(self.frame_key)
 		self.texture = cache_item.index_texture
 		self.material = cache_item.frame_shader
+
+func _process(_delta: float) -> void:
+	if GameState.palette_animation_tick != self.palette_animation_last_tick \
+			and self.is_animated:
+		self.palette_animation_last_tick = GameState.palette_animation_tick
+		self.material.set_shader_parameter("animated_color_offset", self.palette_animation_last_tick % self.animation_length)
