@@ -1,10 +1,13 @@
 class_name SObj extends Node
 
-var collision: int = 0x0
-var height: int = 0
+var collision: int
+var height: int
 var tile_indices: Array[int] = []
 
-func _init(collision: int, height: int, tile_indices: Array[int]):
-	self.collision = collision
-	self.height = height
-	self.tile_indices.append_array(tile_indices)
+func _init(
+		p_collision: int,
+		p_height: int,
+		p_tile_indices: Array[int]):
+	self.collision = p_collision
+	self.height = p_height
+	self.tile_indices.append_array(p_tile_indices)

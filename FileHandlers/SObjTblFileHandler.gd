@@ -1,12 +1,9 @@
 class_name SObjTblFileHandler extends NTK_FileHandler
 
-# SObj - Static Objects
-const SObj = preload("res://DataTypes/SObj.gd")
+var TBL_MASK: int = 0x7F
 
-var TBL_MASK := 0x7F
-
-var object_count := 0
-var objects := {}
+var object_count: int = 0
+var objects: Dictionary[int, SObj] = {}
 
 func _init(file):
 	super(file)
@@ -15,12 +12,12 @@ func _init(file):
 	object_count = read_u32(file_position)
 	file_position += 4
 	
-	var unknown_short := read_u16(file_position)
+	var _unknown_short := read_u16(file_position)
 	file_position += 2
 	
 	# Objects
 	for i in range(object_count):
-		var unknown_bytes := read_bytes(file_position, 5)
+		var _unknown_bytes := read_bytes(file_position, 5)
 		file_position += 5
 		var collision := read_u8(file_position)
 		file_position += 1

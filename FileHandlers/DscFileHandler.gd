@@ -1,9 +1,5 @@
 class_name DscFileHandler extends NTK_FileHandler
 
-const Part = preload("res://DataTypes/Part.gd")
-const PartAnimation = preload("res://DataTypes/PartAnimation.gd")
-const PartAnimationFrame = preload("res://DataTypes/PartAnimationFrame.gd")
-
 var HEADER_SIZE := 0x17
 
 var part_count := 0

@@ -1,4 +1,4 @@
-extends Node
+class_name Indices extends Node
 
 var epf_index: int = -1
 var frame_index: int = -1

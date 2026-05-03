@@ -1,8 +1,5 @@
 class_name FrameSprite extends Sprite2D
 
-const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
-const Palette = preload("res://DataTypes/Palette.gd")
-
 var is_animated: bool = false
 var animation_length: int = 0
 var palette_animation_last_tick: int = 0
@@ -13,15 +10,15 @@ var palette: Palette
 var color_offset: int
 
 func _init(
-		_frame_key: String,
-		_frame: NTK_Frame,
-		_palette: Palette,
-		_color_offset: int=0) -> void:
+		p_frame_key: String,
+		p_frame: NTK_Frame,
+		p_palette: Palette,
+		p_color_offset: int=0) -> void:
 	# Frame Parameters
-	self.frame_key = _frame_key
-	self.ntk_frame = _frame
-	self.palette = _palette
-	self.color_offset = _color_offset
+	self.frame_key = p_frame_key
+	self.ntk_frame = p_frame
+	self.palette = p_palette
+	self.color_offset = p_color_offset
 	self.centered = false
 	self.offset = self.ntk_frame.pivot
 
@@ -37,7 +34,6 @@ func _init(
 			shader_material.shader = frame_shader
 			shader_material.set_shader_parameter("mask_tex", mask_texture)
 			shader_material.set_shader_parameter("palette_tex", palette_texture)
-			shader_material.set_shader_parameter("animated_color_offset", GameState.palette_animation_tick)
 			shader_material.set_shader_parameter("animation_range_count", palette_animation_count)
 			shader_material.set_shader_parameter("initial_color_offset", self.color_offset)
 			var ranges: Array[Vector4i] = []
@@ -61,9 +57,3 @@ func _init(
 		var cache_item: FrameCacheItem = FrameCache.get_item(self.frame_key)
 		self.texture = cache_item.index_texture
 		self.material = cache_item.frame_shader
-
-func _process(_delta: float) -> void:
-	if GameState.palette_animation_tick != self.palette_animation_last_tick \
-			and self.is_animated:
-		self.palette_animation_last_tick = GameState.palette_animation_tick
-		self.material.set_shader_parameter("animated_color_offset", self.palette_animation_last_tick % self.animation_length)

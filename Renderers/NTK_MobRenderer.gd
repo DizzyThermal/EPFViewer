@@ -1,13 +1,10 @@
 class_name NTK_MobRenderer extends NTK_Renderer
 
-const Mob = preload("res://DataTypes/Mob.gd")
-
 var dna: DnaFileHandler = null
 var dat_prefix := ""
 
 var mobs := {}
 var animation_frames := {}
-var mob_sprite_sheets := {}
 
 func _numeric_sort(a: String, b: String) -> bool:
 	if int(a.replace(dat_prefix, "").replace(".dat", "")) \

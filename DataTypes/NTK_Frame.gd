@@ -1,24 +1,34 @@
-extends Node
+class_name NTK_Frame extends Node
 
-var left: int = 0
-var top: int = 0
-var right: int = 0
-var bottom: int = 0
-var width: int = 0
-var height: int = 0
+var left: int
+var top: int
+var right: int
+var bottom: int
+var width: int
+var height: int
 var size: Vector2i = Vector2i(0, 0)
-var raw_pixel_data := PackedByteArray()
+var pivot: Vector2i = Vector2i(0, 0)
+var raw_pixel_data: PackedByteArray = PackedByteArray()
 var raw_pixel_data_array: Array[int] = []
-var mask_image: Image = null
+var mask_image: Image
 
-func _init(left: int, top: int, right: int, bottom: int, width: int, height: int, raw_pixel_data: PackedByteArray, mask_image: Image):
-	self.left = left
-	self.top = top
-	self.right = right
-	self.bottom = bottom
-	self.width = width
-	self.height = height
-	self.size = Vector2i(width, height)
-	self.raw_pixel_data.append_array(raw_pixel_data)
+func _init(
+		p_left: int,
+		p_top: int,
+		p_right: int,
+		p_bottom: int,
+		p_width: int,
+		p_height: int,
+		p_raw_pixel_data: PackedByteArray,
+		p_mask_image: Image):
+	self.left = p_left
+	self.top = p_top
+	self.right = p_right
+	self.bottom = p_bottom
+	self.width = p_width
+	self.height = p_height
+	self.size = Vector2i(self.width, self.height)
+	self.pivot = Vector2i(self.left, self.top)
+	self.raw_pixel_data.append_array(p_raw_pixel_data)
 	self.raw_pixel_data_array.append_array(Array(self.raw_pixel_data))
-	self.mask_image = mask_image
+	self.mask_image = p_mask_image

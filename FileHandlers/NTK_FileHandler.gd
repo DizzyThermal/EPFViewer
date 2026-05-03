@@ -28,9 +28,12 @@ func read_s8(file_position: int) -> int:
 	return read_value
 
 func read_s16(file_position: int) -> int:
-	var read_value := file_bytes.decode_s16(file_position)
-	
-	return read_value
+	if file_position < 0 or \
+			file_position > file_bytes.size() - 2:
+		push_error("Read error: Offset %d is out of bounds for size %d" % [file_position, file_bytes.size()])
+		return 0
+
+	return file_bytes.decode_s16(file_position)
 
 func read_s32(file_position: int) -> int:
 	var read_value := file_bytes.decode_s32(file_position)

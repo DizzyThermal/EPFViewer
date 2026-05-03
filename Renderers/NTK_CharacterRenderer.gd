@@ -1,8 +1,5 @@
 class_name NTK_CharacterRenderer extends Node
 
-const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
-const NTK_PartRenderer = preload("res://Renderers/NTK_PartRenderer.gd")
-
 var arrow_renderer: NTK_PartRenderer = null
 var body_renderer: NTK_PartRenderer = null
 var coat_renderer: NTK_PartRenderer = null
@@ -89,43 +86,42 @@ func _init() -> void:
 		print("[CharacterRenderer]: ", Time.get_ticks_msec() - start_time, " ms")
 
 func render_part(
-	motion_id: int,
-	motion_frame_index: int,
-	palette_animation_last_tick: int,
-	part_layer_id: NTK_Animations.PartLayer,
-	part_name: String,
-	part_info: Dictionary) -> Sprite2D:
-	var motion: Motion = Renderers.motion_tbl.motions[motion_id]
+		motion_id: int,
+		motion_frame_index: int,
+		_part_layer_id: NTK_Animations.PartLayer,
+		part_name: String,
+		part_info: Dictionary) -> FrameSprite:
 	var part_renderer: NTK_PartRenderer = part_renderers[part_name]
 	var part: Part = part_renderer.dsc.parts[part_info.item.char_index]
 	## TODO: Incorporate chunkNumber w/ animations Dictionary
+	## var motion: Motion = Renderers.motion_tbl.motions[motion_id]
 	## Old Idx (Band-Aid): NTK_Animations.PartAnimations[motion.motion_name][part_name]
 	var part_animation: PartAnimation = part.animations[motion_id]
 	##
-	var part_animation_frame: PartAnimationFrames = part_animation.animation_frames[motion_frame_index]
+	var part_animation_frame: PartAnimationFrame = part_animation.animation_frames[motion_frame_index]
 	var frame_index: int = part.frame_index + part_animation_frame.frame_offset
 	var part_frame: NTK_Frame = part_renderer.get_frame(frame_index)
+	var palette_index: int = part_info.item.char_palette if 'char_palette' in part_info.item else 0
+	var palette: Palette = part_renderer.pal.get_palette(palette_index)
+	var color_offset: int = part_info.item.char_color_offset if 'char_color_offset' in part_info.item else 0
 	character_frames.append(part_frame)
-	var part_image: Image = part_renderer.render_frame(
+	var part_key: String = "-".join([
+		"Part",
+		part_name,
 		frame_index,
-		part_info.item.char_palette if 'char_palette' in part_info.item else 0,
-		palette_animation_last_tick,
-		part_info.item.char_color_offset if 'char_color_offset' in part_info.item else 0)
-	var part_sprite = Sprite2D.new()
-	part_sprite.centered = false
-	part_sprite.texture = ImageTexture.create_from_image(part_image)
-	part_sprite.position.x = part_frame.left
-	part_sprite.position.y = part_frame.top
+		palette_index,
+		color_offset,
+	])
+	var part_sprite: FrameSprite = FrameSprite.new(part_key, part_frame, palette, color_offset)
 
 	return part_sprite
 
 func render_character(
 		motion_id: int,
 		motion_frame_index: int,
-		palette_animation_last_tick: int,
 		parts: Dictionary) -> Array:
 	character_frames.clear()
-	var character_sprites: Array[Sprite2D] = []
+	var character_sprites: Array[FrameSprite] = []
 
 	var motion: Motion = Renderers.motion_tbl.motions[motion_id]
 	var motion_frame: MotionFrame = motion.motion_frames[motion_frame_index]
@@ -140,7 +136,7 @@ func render_character(
 				part_name = "Bow"
 		if part_name not in part_renderers or part_name not in parts or len(parts[part_name]) == 0:
 			continue
-		var part_sprite := render_part(motion_id, motion_frame_index, palette_animation_last_tick, part_layer_id, part_name, parts[part_name])
+		var part_sprite: FrameSprite = render_part(motion_id, motion_frame_index, part_layer_id, part_name, parts[part_name])
 		if part_sprite != null:
 			character_sprites.append(part_sprite)
 

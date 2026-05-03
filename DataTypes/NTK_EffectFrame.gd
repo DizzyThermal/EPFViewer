@@ -1,16 +1,16 @@
 class_name NTK_EffectFrame extends Node
 
-var frame_index := -1
-var frame_delay := 0
-var palette_index := 0
-var unknown := 0
+var frame_index: int
+var frame_delay: int
+var palette_index: int = 0
+var unknown: int = 0	# Loop Flag?
 
 func _init(
-		frame_index: int,
-		frame_delay: int,
-		palette_index: int,
-		unknown: int):
-	self.frame_index = frame_index
-	self.frame_delay = frame_delay
-	self.palette_index = palette_index
-	self.unknown = unknown
+		p_frame_index: int,
+		p_frame_delay: int,
+		p_palette_index: int,
+		p_unknown: int) -> void:
+	self.frame_index = p_frame_index
+	self.frame_delay = p_frame_delay
+	self.palette_index = p_palette_index
+	self.unknown = p_unknown

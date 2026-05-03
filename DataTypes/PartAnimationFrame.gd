@@ -1,10 +1,10 @@
-class_name PartAnimationFrames extends Node
+class_name PartAnimationFrame extends Node
 
-var frame_offset := -1
-var unknown_bytes := PackedByteArray()
+var frame_offset: int
+var unknown_bytes: PackedByteArray = PackedByteArray()
 
 func _init(
-		frame_offset: int,
-		unknown_bytes: PackedByteArray):
-	self.frame_offset = frame_offset
-	self.unknown_bytes.append_array(unknown_bytes)
+		p_frame_offset: int,
+		p_unknown_bytes: PackedByteArray):
+	self.frame_offset = p_frame_offset
+	self.unknown_bytes.append_array(p_unknown_bytes)

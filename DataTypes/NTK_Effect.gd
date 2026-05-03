@@ -1,14 +1,12 @@
 class_name NTK_Effect extends Node
 
-const NTK_EffectFrame = preload("res://DataTypes/NTK_EffectFrame.gd")
-
-var effect_index := -1
-var frame_count := 0
+var effect_index: int
+var frame_count: int
 var effect_frames: Array[NTK_EffectFrame] = []
 func _init(
-		effect_index: int,
-		frame_count: int,
-		effect_frames: Array[NTK_EffectFrame]):
-	self.effect_index = effect_index
-	self.frame_count = frame_count
-	self.effect_frames.append_array(effect_frames)
+		p_effect_index: int,
+		p_frame_count: int,
+		p_effect_frames: Array[NTK_EffectFrame]) -> void:
+	self.effect_index = p_effect_index
+	self.frame_count = p_frame_count
+	self.effect_frames.append_array(p_effect_frames)

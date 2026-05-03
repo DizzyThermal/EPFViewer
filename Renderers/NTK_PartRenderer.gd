@@ -1,12 +1,10 @@
 class_name NTK_PartRenderer extends NTK_Renderer
 
-const Part = preload("res://DataTypes/Part.gd")
+var dsc: DscFileHandler
+var dat_prefix: String = ""
 
-var dsc: DscFileHandler = null
-var dat_prefix := ""
-
-var part_name := ""
-var part_count := 0
+var part_name: String = ""
+var part_count: int = 0
 
 func _numeric_sort(a: String, b: String) -> bool:
 	if int(a.replace(dat_prefix, "").replace(".dat", "")) \
@@ -15,25 +13,25 @@ func _numeric_sort(a: String, b: String) -> bool:
 	return false
 
 func _init(
-		part_name: String,
+		p_part_name: String,
 		char_dat: DatFileHandler,
 		misc_dat: DatFileHandler,
-		dat_prefix=null,
+		p_dat_prefix=null,
 		dsc_prefix=null,
 		epf_prefix=null,
 		pal_prefix=null):
 	var start_time := Time.get_ticks_msec()
-	self.part_name = part_name
-	dat_prefix = dat_prefix if dat_prefix else part_name.to_lower()
-	dsc_prefix = dsc_prefix if dsc_prefix else part_name
-	epf_prefix = epf_prefix if epf_prefix else part_name
-	pal_prefix = pal_prefix if pal_prefix else part_name
+	self.part_name = p_part_name
+	self.dat_prefix = p_dat_prefix if p_dat_prefix else self.part_name.to_lower()
+	dsc_prefix = dsc_prefix if dsc_prefix else self.part_name
+	epf_prefix = epf_prefix if epf_prefix else self.part_name
+	pal_prefix = pal_prefix if pal_prefix else self.part_name
 
 	# DSC
 	dsc = DscFileHandler.new(char_dat.get_file(dsc_prefix + ".dsc"))
 	part_count = dsc.part_count
-	if part_name in Debug.debug_part_dsc:
-		dsc.print_part_info(Debug.debug_part_dsc[part_name], part_name)
+	if self.part_name in Debug.debug_part_dsc:
+		dsc.print_part_info(Debug.debug_part_dsc[self.part_name], self.part_name)
 	# PAL
 	if char_dat.contains_file(pal_prefix + ".pal") and 'misc:' not in pal_prefix:
 		pal = PalFileHandler.new(char_dat.get_file(pal_prefix + ".pal"))
@@ -53,7 +51,10 @@ func _init(
 			files.append(file_name)
 	files.sort_custom(_numeric_sort)
 	for file_name in files:
-		epfs.append(EpfFileHandler.new(DatFileHandler.new(file_name).get_file(file_name.replace("dat", "epf"))))
+		var epf_file_name: String = file_name \
+			.replace("dat", "epf") \
+			.replace("DAT", "epf")
+		epfs.append(EpfFileHandler.new(DatFileHandler.new(file_name).get_file(epf_file_name)))
 	
 	if Debug.debug_renderer_timings:
-		print("[PartRenderer]: [", part_name, "]: ", Time.get_ticks_msec() - start_time, " ms")
+		print("[PartRenderer]: [", self.part_name, "]: ", Time.get_ticks_msec() - start_time, " ms")

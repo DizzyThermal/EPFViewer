@@ -1,9 +1,7 @@
 class_name PalFileHandler extends NTK_FileHandler
 
-const Palette = preload("res://DataTypes/Palette.gd")
-
-var header_size := 0
-var palette_count := 1
+var header_size: int = 0
+var palette_count: int = 1
 
 var palettes: Array[Palette] = []
 
@@ -19,7 +17,7 @@ func _init(file):
 		header_size = 4
 
 	for i in range(palette_count):
-		var pal_header := read_utf8(file_position, 9)
+		var _pal_header := read_utf8(file_position, 9)
 		file_position += 9
 		var unknown_bytes_1 := read_bytes(file_position, 15)
 		file_position += 15
