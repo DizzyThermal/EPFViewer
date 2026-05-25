@@ -1,10 +1,11 @@
 extends Node
 
 const default_data_dirs: Array[String] = [
-	"C:\\Program Files\\KRU\\NexusTK\\Data",					# Windows 32-Bit Default
-	"C:\\Program Files (x86)\\KRU\\NexusTK\\Data",				# Windows 64-Bit Default
-	"${HOME}/.wine/drive_c/Program Files/KRU/NexusTK/Data",		# Linux (Wine 32-Bit)
-	"./Data",													# Project Data Directory
+    "C:\\Program Files\\KRU\\NexusTK\\Data",                        # Windows 32-Bit Default
+    "C:\\Program Files (x86)\\KRU\\NexusTK\\Data",                  # Windows 64-Bit Default
+    "${HOME}/.wine/drive_c/Program Files/KRU/NexusTK/Data",         # Linux (Wine 32-Bit)
+    "${HOME}/.wine/drive_c/Program Files (x86)/KRU/NexusTK/Data",   # Linux (Wine 64-Bit)
+    "./Data",                                                       # Project Data Directory
 ]
 
 var database_initialized: bool = false
