@@ -4,9 +4,6 @@ const color_tile_size := 16
 const min_frame_size: Vector2i = Vector2i(1, 1)
 const max_frame_size: Vector2i = Vector2i(16, 16)
 
-const Indices = preload("res://DataTypes/Indices.gd")
-const NTK_Frame = preload("res://DataTypes/NTK_Frame.gd")
-
 @onready var frame_container: CenterContainer = $UI/FrameContainer
 @onready var epf_options: OptionButton = $UI/EpfOptions
 @onready var epf_index_spinbox: SpinBox = $UI/EpfIndexSpinbox
